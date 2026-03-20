@@ -1,0 +1,20 @@
+{
+  "name": "golden-path-ecs-template",
+  "version": "0.1.0",
+  "workspaces": [
+    "service",
+    "infra"
+  ],
+  "scripts": {
+    "build": "npm run build -ws",
+    "test": "npm run test -ws",
+    "lint": "npm run lint -ws"
+  },
+  "devDependencies": {
+    "aws-cdk": "^2.1112.0"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.244.0",
+    "constructs": "^10.5.1"
+  }
+}
