@@ -1,0 +1,3 @@
+type: skill
+skillName: fastify
+description: "Use when implementing or refactoring Fastify application code and route structure in the service layer."
