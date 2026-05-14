@@ -43,6 +43,7 @@ Read the relevant skill file from `.ai/skills/` when the task matches its descri
 - **nestjs**: Use when implementing, refactoring, or explaining NestJS service code, including controllers, modules, providers, GraphQL resolvers, DTOs, validation, and tests; pair with clean-architecture for layer boundaries. (read `.ai/skills/nestjs/SKILL.md`)
 - **principal-engineer-planner**: Use before implementation to inspect the repository, clarify requirements, compare alternatives, identify risks, and produce an implementation-ready plan under docs/plans/. (read `.ai/skills/principal-engineer-planner/SKILL.md`)
 - **typescript**: Use when designing or refactoring TypeScript types, function signatures, modules, and application structure. (read `.ai/skills/typescript/SKILL.md`)
+- **vitest-testing**: Use when creating, refactoring, reviewing, or explaining TypeScript tests with Vitest, including fake-first testing, reusable fakes, fixture-like setup, NestJS TestingModule tests, e2e tests, and test categorization. (read `.ai/skills/vitest-testing/SKILL.md`)
 
 ## AI Review Agents
 
