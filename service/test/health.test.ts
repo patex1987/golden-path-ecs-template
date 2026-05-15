@@ -1,27 +1,32 @@
+import type { INestApplication } from '@nestjs/common';
+import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import type { FastifyInstance } from 'fastify';
 
-describe('GET /health', () => {
-  let app: FastifyInstance;
+import { createApp } from '../src/app';
+
+describe('health HTTP endpoints', () => {
+  let app: INestApplication;
 
   beforeAll(async () => {
-    process.env.NODE_ENV = 'development';
-
-    const { createApp } = await import('../src/app.js');
     app = await createApp();
+    await app.init();
   });
 
   afterAll(async () => {
     await app.close();
   });
 
-  it('returns an ok status payload', async () => {
-    const response = await app.inject({
-      method: 'GET',
-      url: '/health',
-    });
+  it('GET /health returns liveness status', async () => {
+    const response = await request(app.getHttpServer()).get('/health');
 
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({ status: 'ok' });
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ status: 'ok' });
+  });
+
+  it('GET /ready returns readiness status', async () => {
+    const response = await request(app.getHttpServer()).get('/ready');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ status: 'ready', checks: [] });
   });
 });
