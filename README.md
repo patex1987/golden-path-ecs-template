@@ -93,9 +93,9 @@ A product team should be able to consume it with a small amount of code.
 Build a small NestJS + TypeScript backend with:
 - `GET /health`
 - `GET /ready`
-- GraphQL query for a booking by id
-- GraphQL query for listing bookings
-- GraphQL mutation for requesting a booking sync job
+- GraphQL queries for movies and screenings
+- GraphQL mutation for requesting a reservation
+- GraphQL query for polling reservation request status
 
 This service can be fake. It does not need to solve a real business problem.
 It only needs enough shape to look like a real internal service and teach NestJS, GraphQL, and platform health checks.
@@ -108,12 +108,12 @@ Recommended additions:
 - tests
 
 ### Example business theme
-Use a lightweight booking sync concept to make the example feel operationally realistic:
+Use a lightweight movie reservation concept to make the example feel operationally realistic:
 
-- GraphQL `booking(id)` returns a fake booking
-- GraphQL `bookings` returns fake bookings
-- GraphQL `requestBookingSync` creates a fake sync job
-- a future worker processes sync jobs asynchronously
+- GraphQL `movies` and `screenings` return fake catalog data
+- GraphQL `requestReservation` creates an async reservation request
+- GraphQL `reservationRequest(id)` lets a client poll status
+- a future worker processes reservation requests asynchronously
 - logs, traces, and metrics show operational state
 
 ---
@@ -181,7 +181,7 @@ Choose one:
 
 ### Option A: Worker service
 - consumes jobs from SQS
-- processes “booking sync” requests
+- processes movie reservation requests
 - logs success/failure
 - can scale separately from the HTTP API
 
@@ -204,12 +204,13 @@ Write docs as if other engineers will consume your work.
 
 Required docs:
 - `README.md`
-- `docs/architecture.md`
-- `docs/golden-path.md`
-- `docs/platform-api.md`
-- `docs/runbook.md`
-- `docs/architecture-decisions.md`
-- `docs/ai-review-workflow.md`
+- `docs/index.md`
+- `docs/architecture/architecture.md`
+- `docs/architecture/golden-path.md`
+- `docs/architecture/platform-api.md`
+- `docs/operations/runbook.md`
+- `docs/architecture/architecture-decisions.md`
+- `docs/workflows/ai-review-workflow.md`
 
 ### README should explain
 - what the project is
@@ -307,7 +308,7 @@ CI, staging/prod config, and project cleanup complete
 ### Backend
 - NestJS
 - REST endpoints for health/readiness
-- code-first GraphQL for booking operations
+- code-first GraphQL for movie reservation operations
 
 Best default now: **NestJS**, because learning Nest modules, dependency injection, controllers, and resolvers is the current priority.
 
@@ -330,7 +331,7 @@ Best default now: **NestJS**, because learning Nest modules, dependency injectio
 
 ### Async
 - SQS for ECS worker workloads
-- queue-backed booking sync as the first async example
+- queue-backed reservation processing as the first async example
 
 ### Local and cluster runtimes
 - Docker Compose

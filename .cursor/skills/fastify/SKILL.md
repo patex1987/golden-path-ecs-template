@@ -1,7 +1,11 @@
 ---
 name: fastify
-description: Use when implementing or refactoring Fastify application code and route structure in the service layer.
+description: Legacy/revisit-only skill for old Fastify service code. Do not use for current service work unless explicitly asked to revisit the HTTP adapter.
 ---
+
+This skill is legacy/revisit-only in this repository. The current service framework is NestJS.
+
+Do not use this skill for normal service work. Use it only if the user explicitly asks to revisit the old Fastify implementation or compare NestJS against Fastify.
 
 You are a senior TypeScript programmer with experience in the Fastify framework and a preference for clean programming and design patterns.
 

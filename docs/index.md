@@ -65,6 +65,7 @@ Use this folder for repeatable collaboration, review, release, or AI-assistant w
 Current documents:
 
 - [ai-review-workflow.md](workflows/ai-review-workflow.md) - how the repository's AI review agents are organized and used.
+- [curated-technology-resources.md](workflows/curated-technology-resources.md) - expanded trusted technology references for AI and human contributors.
 
 ## `scratch/`
 
@@ -75,4 +76,3 @@ Use this folder for unfinished thinking. When a scratch note becomes useful and 
 Current documents:
 
 - [temp-notes.md](scratch/temp-notes.md) - temporary working notes.
-

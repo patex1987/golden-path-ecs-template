@@ -1,25 +1,95 @@
 # Project AI Guidance
 
-This repository is a learning project for building a small internal-platform-style ECS service template with:
-- TypeScript application code
-- AWS CDK infrastructure code
-- ECS/Fargate deployment concepts
+This repository is a learning project for building a small internal-platform-style ECS service template with TypeScript application code, AWS CDK infrastructure code, and ECS/Fargate deployment concepts.
 
-When helping in this repository:
+The user is learning TypeScript, NestJS, AWS CDK, and platform engineering. Understanding is part of the deliverable: keep explanations concrete, tie them to actual files, and explain tradeoffs instead of hiding them behind broad abstractions.
 
-- keep explanations concrete and tied to the actual files
-- prefer solutions that teach TypeScript and CDK concepts clearly
-- explain tradeoffs when proposing abstractions or infrastructure choices
-- avoid over-engineering early abstractions
-- favor coherent, incremental implementation over broad scaffolding
+## Repository Layout
 
-The user is learning, so understanding is part of the deliverable.
+- `service/`: NestJS TypeScript backend. Keep NestJS in bootstrap, DI, controllers, and GraphQL resolvers; keep domain and application code plain TypeScript where possible.
+- `infra/`: AWS CDK TypeScript workspace. Explain how constructs map to CloudFormation and AWS resources.
+- `docs/`: project documentation. Start at `docs/index.md`; save implementation plans under `docs/plans/`.
+- `.ai/`: source of truth for AI guidance, rules, skills, and review agents. `AGENTS.md` is generated from this folder by `.ai/sync.sh`.
 
-## Planning expectations
+## Dev Environment Tips
+
+- Use `npm`, not pnpm or yarn.
+- This is an npm workspace repo with `service` and `infra` workspaces.
+- Prefer workspace commands from the repo root, for example `npm -w service run check`.
+- Check the relevant `package.json` before inventing commands or assuming tooling.
+- Read existing docs and source before asking questions the repository can answer.
+
+## Build And Test Commands
+
+- Root build: `npm run build`
+- Root tests: `npm test`
+- Root lint: `npm run lint`
+- Service dev server: `npm -w service run dev`
+- Service full check: `npm -w service run check`
+- Service typecheck: `npm -w service run typecheck`
+- Service tests: `npm -w service test`
+- Service focused test: `npm -w service test -- -t "<test name>"`
+- Infra build: `npm -w infra run build`
+- Infra tests: `npm -w infra test`
+- CDK commands: `npm -w infra run cdk -- <args>`
+
+Run the narrowest useful check while iterating, then run the relevant full check before handing work back.
+
+## Code And Architecture Conventions
+
+- Prefer small, incremental changes that fit existing project structure.
+- Do not over-engineer early abstractions; extract patterns only after the duplication or boundary is real.
+- The service is NestJS now. Do not introduce Fastify or Express route patterns unless explicitly asked to revisit the HTTP adapter.
+- Keep framework decorators and DI wiring at the edges. Domain types, application services, ports, and repositories should stay plain TypeScript where possible.
+- Use explicit, readable TypeScript types when they improve clarity.
+- Distinguish compile-time TypeScript safety from runtime validation. Use Zod or framework validation at external boundaries.
+- For infrastructure, explain what AWS resource is being modeled and how CDK code maps to deployed infrastructure.
+- Roadmap technologies such as PostgreSQL, Knex, SQS, Kubernetes, and k3d should only be introduced in the phase that calls for them.
+
+## Planning Guidance
 
 - For non-trivial features, refactors, integrations, migrations, infrastructure changes, or architecture changes, plan before implementing.
 - Use the `principal-engineer-planner` skill for ambiguous, cross-cutting, risky, or design-heavy work.
 - Do not implement from vague requirements when a short planning pass would materially reduce risk.
-- Inspect the repository before asking questions that the code or docs can answer.
 - Prefer the smallest design that satisfies the requirements and fits existing project conventions.
 - Save implementation plans under `docs/plans/`.
+
+## Testing Guidance
+
+- Add or update tests for behavior changes.
+- Service tests use Vitest; HTTP/e2e-style tests use Supertest.
+- Infra tests use Jest and CDK assertions.
+- Prefer fake-first tests and small real integration boundaries over brittle over-mocking.
+- After moving files or changing imports, run typecheck/lint/tests for the affected workspace.
+
+## Security And Operations
+
+- Do not commit secrets, credentials, tokens, or local `.env` values.
+- Treat IAM, networking, public exposure, auth, validation, and logging choices as explicit design decisions.
+- Keep health and readiness endpoints simple and platform-friendly.
+- Avoid adding AWS resources, public endpoints, databases, queues, or background workers without a plan and a rollback/removal path.
+
+## Documentation And Review
+
+- Update docs for user-facing behavior, architecture decisions, operations, or developer workflow changes.
+- Use `docs/architecture/architecture-decisions.md` for durable architectural decisions.
+- Use `docs/workflows/curated-technology-resources.md` for the expanded resource list.
+- PR or review summaries should explain what changed, why it changed, and how it was verified.
+
+## Curated Technology Resources
+
+Prefer these project-approved sources over generic training-data patterns or random tutorials. Keep this list compact; use `docs/workflows/curated-technology-resources.md` for the expanded version.
+
+| Technology | Purpose | Preferred sources |
+| --- | --- | --- |
+| TypeScript + Node.js | Application and CDK language/runtime | [TypeScript Handbook](https://www.typescriptlang.org/docs/), [TSConfig Reference](https://www.typescriptlang.org/tsconfig/), [Node.js Learn](https://nodejs.org/learn) |
+| NestJS | Service framework for HTTP, GraphQL, DI, and modules | [NestJS docs](https://docs.nestjs.com/), [NestJS GraphQL](https://docs.nestjs.com/graphql/quick-start), [NestJS testing](https://docs.nestjs.com/fundamentals/testing) |
+| GraphQL + Apollo | Business API contract | [GraphQL Learn](https://graphql.org/learn/), [GraphQL schema docs](https://graphql.org/learn/schema/), [Apollo Server docs](https://www.apollographql.com/docs/apollo-server) |
+| Zod | Runtime validation at boundaries | [Zod docs](https://zod.dev/) |
+| Vitest + Supertest | Service tests and HTTP tests | [Vitest guide](https://vitest.dev/guide/), [Vitest mocking](https://vitest.dev/guide/mocking), [Supertest README](https://github.com/forwardemail/supertest) |
+| Jest + CDK assertions | Infrastructure tests | [Jest docs](https://jestjs.io/docs/getting-started), [CDK testing docs](https://docs.aws.amazon.com/cdk/v2/guide/testing.html) |
+| AWS CDK + Constructs | Infrastructure as code | [CDK v2 guide](https://docs.aws.amazon.com/cdk/v2/guide/home.html), [CDK best practices](https://docs.aws.amazon.com/cdk/v2/guide/best-practices.html), [CDK API reference](https://docs.aws.amazon.com/cdk/api/v2/) |
+| ECS/Fargate/ALB | Primary AWS deployment target | [ECS guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html), [Fargate guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html), [ECS load balancing](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-load-balancing.html) |
+| Docker/Compose | Container packaging and local runtime | [Docker build best practices](https://docs.docker.com/build/building/best-practices/), [Docker Compose docs](https://docs.docker.com/compose/), [Docker Node.js guide](https://docs.docker.com/guides/nodejs/) |
+| OpenTelemetry | Planned traces/logs/metrics contract | [OTel concepts](https://opentelemetry.io/docs/concepts/), [OTel JavaScript](https://opentelemetry.io/docs/languages/js/), [OTel Collector](https://opentelemetry.io/docs/collector/) |
+| Static checks | Formatting, linting, typed linting | [ESLint config](https://eslint.org/docs/latest/use/configure/), [typescript-eslint](https://typescript-eslint.io/getting-started/), [Prettier](https://prettier.io/docs/), [Oxlint](https://oxc.rs/docs/guide/usage/linter.html) |
