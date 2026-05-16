@@ -61,13 +61,13 @@ A product team should be able to consume it with a small amount of code.
 
 ```text
 .
-├── service/
+├── movie-reservation-service/
 │   ├── src/
 │   ├── test/
 │   ├── Dockerfile
 │   ├── package.json
 │   └── tsconfig.json
-├── infra/
+├── ecs-infra/
 │   ├── bin/
 │   ├── lib/
 │   │   ├── constructs/
@@ -266,7 +266,7 @@ The project should demonstrate:
 Local NestJS backend running with:
 - health endpoint
 - readiness endpoint
-- GraphQL booking query and mutation
+- GraphQL movie reservation auth and reservation operations
 - config
 - logging
 - tests
@@ -378,12 +378,12 @@ By the end, this project should let you say:
 
 ## First implementation steps
 
-1. Convert `service/` to NestJS
+1. Keep `movie-reservation-service/` as the NestJS app
 2. Add REST health/readiness endpoints
-3. Add GraphQL booking query and mutation
+3. Add GraphQL movie reservation query and mutation operations
 4. Add Dockerfile and run locally
 5. Add Docker Compose with an OpenTelemetry Collector
-6. Initialize the CDK platform foundation in `infra/`
+6. Initialize the CDK platform foundation in `ecs-infra/`
 7. Add ECS cluster and deploy the service
 8. Add ALB and health checks
 9. Add logs, traces, alarms, autoscaling

@@ -4,6 +4,13 @@ coverage/
 cdk.out/
 .env
 .env.*
+*.local.env
+*.secret.env
+*.private.env
+*.override.env
+**/env_files/*.env
+!**/env_files/templates/
+!**/env_files/templates/*.env.template
 .DS_Store
 npm-debug.log*
 /schema.gql

@@ -2,13 +2,13 @@
   "name": "golden-path-ecs-template",
   "version": "0.1.0",
   "workspaces": [
-    "service",
-    "infra"
+    "movie-reservation-service",
+    "ecs-infra"
   ],
   "scripts": {
-    "build": "npm run build -ws",
-    "test": "npm run test -ws",
-    "lint": "npm run lint -ws"
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces --if-present"
   },
   "devDependencies": {
     "aws-cdk": "^2.1112.0"
