@@ -31,6 +31,57 @@ Run the service locally with automatic restart:
 npm -w service run dev
 ```
 
+## Nest GraphQL Decorator Metadata
+
+Nest GraphQL code-first resolvers rely on runtime decorator metadata. This is
+different from normal TypeScript types:
+
+- TypeScript types are erased after compilation.
+- Nest decorators run at runtime and inspect metadata through `reflect-metadata`.
+- `emitDecoratorMetadata` in `tsconfig.json` tells the TypeScript compiler to
+  emit metadata such as `design:paramtypes`.
+
+The service entrypoint imports `reflect-metadata` in `src/app.ts` so the runtime
+metadata API exists before Nest loads decorated classes.
+
+There is one extra wrinkle in local development: `npm -w service run dev` uses
+`tsx`, and `tsx` uses esbuild. Esbuild supports decorators well enough to run the
+code, but it does not emit TypeScript's `design:paramtypes` metadata. Nest
+GraphQL's `@Args()` decorator still reads `design:paramtypes` internally before
+using the explicit GraphQL type callback.
+
+That is why resolver arguments that are loaded through `tsx` need explicit
+metadata like this:
+
+```ts
+@Reflect.metadata('design:paramtypes', [String])
+@Query(() => BookingGql, { nullable: true })
+async booking(@Args('id', { type: () => ID }) id: string) {
+  // ...
+}
+```
+
+The explicit `@Args('id', { type: () => ID })` tells GraphQL what schema type to
+use. The `@Reflect.metadata(...)` line fills the runtime metadata slot that
+`tsx` does not emit.
+
+Alternatives:
+
+- Keep the current explicit `@Reflect.metadata(...)` annotations for affected
+  resolver methods. This is small and keeps `tsx` fast for local development.
+- Run local development from compiled JavaScript with `tsc` and `node`, because
+  `tsc` emits decorator metadata when `emitDecoratorMetadata` is enabled.
+- Replace the dev runner with an SWC-based runner configured with
+  `legacyDecorator: true` and `decoratorMetadata: true`, matching
+  `vitest.config.ts`.
+- Avoid Nest GraphQL code-first decorators for this layer and use a schema-first
+  GraphQL setup. That removes this specific reflection dependency, but it is a
+  larger architectural change.
+
+Adding another GraphQL framework is not needed just to solve this. The issue is
+the TypeScript runtime metadata emitted by the chosen dev compiler, not Apollo
+or the GraphQL schema itself.
+
 Build production JavaScript into `dist/`:
 
 ```bash
