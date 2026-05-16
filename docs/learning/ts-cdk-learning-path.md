@@ -102,7 +102,7 @@ Read:
 Do:
 - Add tests for health/config/example endpoint
 - Refactor anything ugly
-- Write `docs/service-architecture.md` with 10–15 lines
+- Write `docs/architecture/service-architecture.md` with 10-15 lines
 
 Deliverable:
 - First clean backend milestone
@@ -178,7 +178,7 @@ Read:
 Do:
 - Add a VPC stack or networking section
 - Add outputs where helpful
-- Add `docs/infra-overview.md`
+- Add `docs/architecture/infra-overview.md`
 
 Deliverable:
 - Networking scaffold in CDK
@@ -202,7 +202,7 @@ Read:
 - `Platform Engineering`: chapters on self-service, platform as product, golden paths
 
 Do:
-- Write `docs/golden-path.md`
+- Write `docs/architecture/golden-path.md`
 - Answer:
   - What should be standardized?
   - What should be customizable?
@@ -281,7 +281,7 @@ Do:
 - Add ALB
 - Add listener and target group
 - Add health check path
-- Document request flow in `docs/request-flow.md`
+- Document request flow in `docs/architecture/request-flow.md`
 
 Deliverable:
 - Internet-facing service architecture defined
@@ -404,7 +404,7 @@ Read:
 - `Team Topologies`: cognitive load, boundaries, team APIs
 
 Do:
-- Write `docs/platform-api.md`
+- Write `docs/architecture/platform-api.md`
 - Explain how a service team would consume your abstraction:
   - what they must provide
   - what they get automatically
@@ -484,7 +484,7 @@ Read:
 
 Do:
 - Add one dashboard or dashboard notes
-- Add one runbook in `docs/runbook.md`
+- Add one runbook in `docs/operations/runbook.md`
 - Include:
   - common alarms
   - first checks
@@ -495,7 +495,7 @@ Deliverable:
 
 ## Day 32
 Do:
-- Write `docs/architecture-decisions.md`
+- Write `docs/architecture/architecture-decisions.md`
 - Include 5–8 decisions:
   - Why ECS over Lambda
   - Why CDK over raw Terraform/CloudFormation here

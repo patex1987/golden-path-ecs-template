@@ -17,8 +17,8 @@ PlatformHttpService
 Example future usage:
 
 ```ts
-new PlatformHttpService(this, 'BookingsApi', {
-  serviceName: 'bookings-api',
+new PlatformHttpService(this, 'MovieReservationsApi', {
+  serviceName: 'movie-reservations-api',
   containerPort: 3000,
   healthCheckPath: '/health',
   desiredCount: 1,
@@ -26,7 +26,7 @@ new PlatformHttpService(this, 'BookingsApi', {
   memoryMiB: 512,
   environment: {
     NODE_ENV: 'production',
-    OTEL_SERVICE_NAME: 'bookings-api',
+    OTEL_SERVICE_NAME: 'movie-reservations-api',
   },
 });
 ```
@@ -52,6 +52,7 @@ Optional inputs:
 - `environment`
 - `secrets`
 - `public`
+- `database`
 - `autoscaling`
 - `alarms`
 - `otel`
@@ -83,13 +84,17 @@ For Docker Compose and k3d, a lightweight app metadata file may be more useful t
 Example shape:
 
 ```yaml
-name: bookings-api
+name: movie-reservations-api
 runtime: node
 buildContext: ./service
 containerPort: 3000
 healthPath: /health
+readinessPath: /ready
 telemetry:
-  serviceName: bookings-api
+  serviceName: movie-reservations-api
+database:
+  required: true
+  migrationCommand: npm run migrate:latest
 ```
 
 Future app entries:
@@ -114,3 +119,48 @@ Every app should be able to receive:
 - `OTEL_LOGS_EXPORTER`
 
 The platform should set the defaults. The app should only override them intentionally.
+
+---
+
+## Database and Migration Contract
+
+The movie reservation service should eventually use Postgres with Knex migrations.
+
+The platform should make these concerns explicit:
+
+- database connection injected through `DATABASE_URL` or separate secret-backed fields
+- migrations run as a separate task or command
+- normal app startup does not mutate the schema
+- migration logs are visible in the same observability system
+
+For ECS, the likely shape is a one-off migration task using the same container image as the API but a different command.
+
+For Docker Compose, the likely shape is a local migration command against the local Postgres container.
+
+For k3d, the likely shape is either a Kubernetes Job or an explicit local command that targets the cluster database.
+
+---
+
+## Worker Service Contract
+
+The first worker should process movie reservation requests.
+
+Future construct name:
+
+```ts
+PlatformWorkerService
+```
+
+Expected inputs:
+
+- `serviceName`
+- container image or build context
+- command override
+- queue binding
+- environment
+- secrets
+- CPU and memory
+- desired count or scaling rules
+- OpenTelemetry settings
+
+The API and worker should share the same domain concepts and database, but they should be deployed and scaled as separate workloads.

@@ -20,6 +20,7 @@ Every service should have:
 - clear secret handling
 - tests for the public API boundary
 - a documented local run path
+- OpenTelemetry resource attributes that identify service, environment, and version
 
 For NestJS services, the expected shape is:
 
@@ -78,13 +79,24 @@ It should prove:
 
 - NestJS app startup
 - REST health checks
-- GraphQL booking operations
+- GraphQL movie reservation operations
+- CQRS-style request/status polling
+- local Postgres persistence and Knex migrations
 - testable module boundaries
 - local Docker execution
 - telemetry export
+- frontend-to-backend trace correlation
 - ECS deployment
 
 Do not optimize this app as if it were the final product. Its job is to teach and validate the platform shape.
+
+The recommended product slice is:
+
+1. list movies and screenings
+2. select seats
+3. request a reservation
+4. poll reservation request status
+5. confirm or reject the reservation asynchronously
 
 ---
 
@@ -107,6 +119,8 @@ The desired workflow should eventually look like:
 make dev
 make test
 make docker-up
+make migrate
+make otel-up
 make k3d-up
 make synth
 make deploy
@@ -125,5 +139,25 @@ Avoid these early:
 - hiding ECS concepts so deeply that they cannot be learned
 - treating observability as a final polish step
 - merging unrelated apps into this repo before the platform contract is clear
+- adding GraphQL subscriptions before request/status polling works
+- adding SQS before the in-process reservation workflow is understood
 
 Prefer small working increments with clear explanations.
+
+---
+
+## Runtime Contract
+
+Every app should eventually be runnable by Docker Compose, k3d, and ECS through the same basic contract:
+
+- container image
+- container port
+- `/health`
+- `/ready`
+- `DATABASE_URL` when persistence is needed
+- `OTEL_SERVICE_NAME`
+- `OTEL_RESOURCE_ATTRIBUTES`
+- `OTEL_EXPORTER_OTLP_ENDPOINT`
+- structured logs with trace correlation fields
+
+The platform wiring changes per runtime. The application contract should not.

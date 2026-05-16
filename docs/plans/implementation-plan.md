@@ -2,7 +2,11 @@
 
 This is the learning and build plan for the golden path platform project.
 
-The project is shifting from a small framework-neutral Node service toward a NestJS-based service because NestJS is the framework you need to learn now. The infrastructure goal stays the same: understand TypeScript, AWS CDK, containers, ECS/Fargate, and platform engineering by building a realistic internal platform template.
+The full roadmap for the next shape lives in:
+
+- `docs/plans/movie-reservation-platform-roadmap.md`
+
+The project is shifting from a small framework-neutral Node service toward a NestJS-based movie reservation service because NestJS is the framework you need to learn now. The infrastructure goal stays the same: understand TypeScript, AWS CDK, containers, ECS/Fargate, and platform engineering by building a realistic internal platform template.
 
 The longer-term target is a small multi-app platform that can run the same workloads in:
 
@@ -11,6 +15,25 @@ The longer-term target is a small multi-app platform that can run the same workl
 - ECS/Fargate for the AWS production-style path
 
 The common operational thread across all three environments is end-to-end OpenTelemetry observability.
+
+---
+
+## Recommended Progression
+
+This is the preferred build order for the full-blown shape:
+
+1. Rename and reshape the fake domain into movie reservation.
+2. Add CQRS-ish GraphQL operations with polling status.
+3. Add a fake async processor in-process first.
+4. Add Postgres and Knex with Docker Compose.
+5. Add structured logging and OpenTelemetry locally.
+6. Add a frontend that calls GraphQL and propagates trace context.
+7. Add ECS CDK: VPC, ECS, ALB, logs, health checks.
+8. Add RDS and a migration ECS task.
+9. Add an SQS worker for async reservation processing.
+10. Add k3d/Kubernetes deployment as a second platform target.
+
+The order is intentional: make the app behavior clear locally before adding managed infrastructure.
 
 ---
 
@@ -31,17 +54,18 @@ It should teach:
 
 ### First business theme
 
-Keep the business domain deliberately small: booking operations.
+Keep the business domain deliberately small: movie reservations.
 
-The initial service should expose:
+The target service should expose:
 
 - `GET /health`
 - `GET /ready`
-- GraphQL query: fetch a booking by id
-- GraphQL query: list bookings
-- GraphQL mutation: request a booking sync job
+- GraphQL query: fetch movies and screenings
+- GraphQL query: fetch reservation request status
+- GraphQL query: fetch a confirmed reservation
+- GraphQL mutation: request a reservation
 
-This gives the app enough shape to be useful for ECS health checks, GraphQL learning, tests, logs, traces, and future async worker behavior.
+This gives the app enough shape to be useful for ECS health checks, GraphQL learning, CQRS-style command/query separation, tests, logs, traces, database migrations, and future async worker behavior.
 
 ### Future cluster applications
 
@@ -78,13 +102,13 @@ Understand the repository responsibilities.
 
 ---
 
-## Phase 1: Convert the Service to NestJS
+## Phase 1: Convert the Service to NestJS and Reshape the Domain
 
-Status: next.
+Status: in progress.
 
 ### Goal
 
-Replace the current Fastify-style service shape with a small, idiomatic NestJS application.
+Keep the small, idiomatic NestJS application shape and move the fake business domain toward movie reservations.
 
 ### Learn first
 
@@ -98,23 +122,23 @@ Replace the current Fastify-style service shape with a small, idiomatic NestJS a
 
 - `AppModule`
 - `HealthModule`
-- `BookingsModule`
+- movie reservation GraphQL module
 - `HealthController`
-- `BookingsResolver`
-- `BookingsService`
+- movie reservation resolver
+- movie reservation application service
 
 ### Suggested implementation order
 
 1. Add NestJS dependencies and enable TypeScript decorators.
 2. Create `AppModule`.
 3. Move `/health` and `/ready` into a Nest controller.
-4. Add a `BookingsService` with fake in-memory data.
-5. Add a GraphQL resolver with one query and one mutation.
+4. Add a plain TypeScript application service with fake in-memory data.
+5. Add GraphQL resolvers for movie, screening, and reservation request behavior.
 6. Update tests to use Nest's HTTP server.
 
 ### Deliverable
 
-The service runs locally as a NestJS app and has both REST health endpoints and GraphQL booking operations.
+The service runs locally as a NestJS app and has both REST health endpoints and GraphQL movie reservation operations.
 
 ### Check yourself
 
@@ -307,13 +331,14 @@ Avoid a one-service architecture that hides platform concerns.
 
 ### Recommended first choice
 
-Add a worker for booking sync jobs.
+Add a worker for movie reservation requests.
 
 ### What to build
 
 - SQS queue
-- GraphQL mutation creates a job
+- GraphQL mutation creates a reservation request
 - worker consumes jobs
+- worker updates reservation request status
 - worker emits logs, traces, and metrics
 - worker scales separately from the API
 
@@ -452,10 +477,10 @@ This matters because the goal is not only to have a working template. The goal i
 
 ## Current Next Steps
 
-1. Convert `service/` to NestJS.
-2. Add REST health/readiness endpoints.
-3. Add GraphQL booking query and mutation.
-4. Update tests.
-5. Add Dockerfile.
-6. Add local OpenTelemetry collector through Docker Compose.
-7. Start the CDK foundation.
+1. Reshape the current booking domain into movie reservation concepts.
+2. Add movie/screening/reservation GraphQL models and queries.
+3. Add `requestReservation` and `reservationRequest` polling.
+4. Keep the in-memory repository until the workflow is clear.
+5. Update tests around the new domain and GraphQL contract.
+6. Add Dockerfile and Docker Compose only after the local service behavior is stable.
+7. Add local OpenTelemetry before starting the ECS CDK foundation.

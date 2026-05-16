@@ -4,6 +4,7 @@ This project is a learning platform for building and operating small backend ser
 
 The immediate architecture is intentionally small:
 
+- one frontend workflow demonstrator
 - one NestJS TypeScript service
 - one AWS CDK infrastructure workspace
 - documentation that explains the platform choices
@@ -22,6 +23,14 @@ Developer
 Golden Path Platform Repo
   |
   | runs one or more apps through common platform targets
+  v
+Frontend
+  |
+  | GraphQL over HTTP with trace context
+  v
+Movie Reservation API
+  |
+  | SQL / async jobs
   v
 Docker Compose / k3d / ECS
   |
@@ -47,11 +56,25 @@ Target framework: NestJS.
 Initial modules:
 
 - `HealthModule` for `/health` and `/ready`
-- `BookingsModule` for GraphQL booking operations
+- `BookingsGraphqlModule` today, eventually renamed around movie reservation operations
+
+The service keeps NestJS at the outer edge. Domain types, application services,
+and in-memory repository adapters are plain TypeScript; Nest modules and
+decorators live in bootstrap, dependency composition, and presentation files.
 
 The health endpoints are platform-facing. ECS, Kubernetes, Docker Compose, and humans can use them to answer whether the process is alive and whether it is ready.
 
-The booking operations are product-facing. They provide enough business behavior to practice types, validation, GraphQL, tests, logs, traces, and eventually async work.
+The movie reservation operations are product-facing. They provide enough business behavior to practice types, validation, GraphQL, tests, logs, traces, database migrations, and eventually async worker behavior.
+
+Target domain concepts:
+
+- `Movie`
+- `Screening`
+- `Seat`
+- `ReservationRequest`
+- `Reservation`
+
+The first async workflow is a reservation request. A client asks for seats, the API returns an accepted request immediately, and the client polls status until the request is confirmed, rejected, or failed.
 
 ---
 
@@ -63,9 +86,14 @@ That means TypeScript classes describe the GraphQL schema through decorators. Th
 
 Use GraphQL first for:
 
-- fetching a booking
-- listing bookings
-- requesting a booking sync
+- fetching movies and screenings
+- requesting a reservation
+- polling a reservation request status
+- fetching a confirmed reservation
+
+The reservation mutation should not pretend the final reservation is complete. It should return a request object, similar in spirit to HTTP `202 Accepted`.
+
+GraphQL subscriptions are a later enhancement. Polling is the first implementation because it teaches the state model without adding WebSocket transport complexity.
 
 Keep health checks as REST endpoints. Load balancers and orchestrators understand simple HTTP health paths better than GraphQL operations.
 
@@ -88,6 +116,9 @@ Core resources:
 - CloudWatch log group
 - IAM execution role
 - IAM task role
+- RDS Postgres after the first stateless ECS service works
+- one-off ECS migration task after RDS exists
+- SQS queue and worker after the in-process reservation processor is understood
 
 Later, this should be wrapped in a reusable construct such as `PlatformHttpService`.
 
@@ -102,9 +133,11 @@ Purpose: fast local development.
 Expected responsibilities:
 
 - build and run services
-- provide local dependencies
+- provide local dependencies such as Postgres
+- run Knex migrations
 - run an OpenTelemetry Collector
 - run or connect to a local observability backend
+- support the frontend workflow demonstrator
 
 ### k3d
 
@@ -125,6 +158,8 @@ Expected responsibilities:
 
 - run containerized services without managing EC2 hosts
 - expose HTTP services through ALB
+- run one-off database migration tasks
+- run API and worker workloads separately
 - use CloudWatch logs and alarms
 - integrate with OpenTelemetry export
 - enforce IAM boundaries

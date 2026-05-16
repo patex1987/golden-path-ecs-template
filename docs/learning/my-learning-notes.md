@@ -30,3 +30,12 @@ Day 4
   - how does dataloader work in gql
   - additional concepts of nest.js: DI, provider, controller, module, resolver
 - created ai skills and subagents
+- moving the code to nest.js
+- running the service for the first time, testing graphql and rest
+```
+curl -sS -X POST http://127.0.0.1:3000/graphql -H "content-type: application/json" --data "{\"query\":\"{ bookings { id customerName status startsAt endsAt } }\"}"
+```
+
+```
+curl -sS http://127.0.0.1:3000/health
+```
