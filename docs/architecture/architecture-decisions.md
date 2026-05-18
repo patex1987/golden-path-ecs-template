@@ -10,7 +10,7 @@ Status: accepted.
 
 ### Decision
 
-Use NestJS as the primary TypeScript backend framework in `service/`.
+Use NestJS as the primary TypeScript backend framework in `movie-reservation-service/`.
 
 ### Reason
 
@@ -214,3 +214,23 @@ The purpose of the repository is to learn TypeScript, CDK, ECS/Fargate, and plat
 ### Tradeoff
 
 The Kubernetes infrastructure will be different from ECS. That is the point: the app should stay portable while the platform layer adapts the runtime.
+
+---
+
+## ADR 011: Use Movie Provider Id As The Initial Tenant Boundary
+
+Status: accepted.
+
+### Decision
+
+Use `movieProviderId` on authenticated users and tenant-scoped movie reservation resources as the current tenant boundary.
+
+### Reason
+
+The service domain is a movie reservation platform, and the tenant-like owner is the movie provider or cinema operator. A domain-specific identifier keeps application code concrete: users list movies, screenings, reservations, and requests for their movie provider.
+
+At this stage, adding both `tenantId` and `movieProviderId` would imply two separate ownership concepts that do not yet exist.
+
+### Tradeoff
+
+`movieProviderId` is less generic than `tenantId`, but it is clearer for the current domain. Introduce a separate generic tenant id only if platform tenancy and movie-provider ownership diverge, for example if one tenant owns multiple providers, billing/audit tenancy differs from provider ownership, or shared platform middleware needs a domain-neutral tenant contract.

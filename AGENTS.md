@@ -8,16 +8,16 @@ The user is learning TypeScript, NestJS, AWS CDK, and platform engineering. Unde
 
 ## Repository Layout
 
-- `service/`: NestJS TypeScript backend. Keep NestJS in bootstrap, DI, controllers, and GraphQL resolvers; keep domain and application code plain TypeScript where possible.
-- `infra/`: AWS CDK TypeScript workspace. Explain how constructs map to CloudFormation and AWS resources.
+- `movie-reservation-service/`: NestJS TypeScript backend. Keep NestJS in bootstrap, DI, controllers, and GraphQL resolvers; keep domain and application code plain TypeScript where possible.
+- `ecs-infra/`: AWS CDK TypeScript workspace. Explain how constructs map to CloudFormation and AWS resources.
 - `docs/`: project documentation. Start at `docs/index.md`; save implementation plans under `docs/plans/`.
 - `.ai/`: source of truth for AI guidance, rules, skills, and review agents. `AGENTS.md` is generated from this folder by `.ai/sync.sh`.
 
 ## Dev Environment Tips
 
 - Use `npm`, not pnpm or yarn.
-- This is an npm workspace repo with `service` and `infra` workspaces.
-- Prefer workspace commands from the repo root, for example `npm -w service run check`.
+- This is an npm workspace repo with `movie-reservation-service` and `ecs-infra` workspaces.
+- Prefer workspace commands from the repo root, for example `npm -w movie-reservation-service run check`.
 - Check the relevant `package.json` before inventing commands or assuming tooling.
 - Read existing docs and source before asking questions the repository can answer.
 
@@ -26,14 +26,14 @@ The user is learning TypeScript, NestJS, AWS CDK, and platform engineering. Unde
 - Root build: `npm run build`
 - Root tests: `npm test`
 - Root lint: `npm run lint`
-- Service dev server: `npm -w service run dev`
-- Service full check: `npm -w service run check`
-- Service typecheck: `npm -w service run typecheck`
-- Service tests: `npm -w service test`
-- Service focused test: `npm -w service test -- -t "<test name>"`
-- Infra build: `npm -w infra run build`
-- Infra tests: `npm -w infra test`
-- CDK commands: `npm -w infra run cdk -- <args>`
+- Service dev server: `npm -w movie-reservation-service run dev`
+- Service full check: `npm -w movie-reservation-service run check`
+- Service typecheck: `npm -w movie-reservation-service run typecheck`
+- Service tests: `npm -w movie-reservation-service test`
+- Service focused test: `npm -w movie-reservation-service test -- -t "<test name>"`
+- Infra build: `npm -w ecs-infra run build`
+- Infra tests: `npm -w ecs-infra test`
+- CDK commands: `npm -w ecs-infra run cdk -- <args>`
 
 Run the narrowest useful check while iterating, then run the relevant full check before handing work back.
 
