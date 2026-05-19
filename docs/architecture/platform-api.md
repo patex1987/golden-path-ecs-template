@@ -86,7 +86,7 @@ Example shape:
 ```yaml
 name: movie-reservations-api
 runtime: node
-buildContext: ./service
+buildContext: ./movie-reservation-service
 containerPort: 3000
 healthPath: /health
 readinessPath: /ready
@@ -99,7 +99,7 @@ database:
 
 Future app entries:
 
-- `golden-path-ecs-template/service`
+- `golden-path-ecs-template/movie-reservation-service`
 - `yoga-studio-api`
 - `python-agent-with-idp`
 

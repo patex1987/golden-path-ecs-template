@@ -34,14 +34,16 @@ sequenceDiagram
   Middleware->>AuthService: authenticateJwtToken(token)
   AuthService->>AuthManager: authenticateJwtToken(token)
   AuthManager-->>AuthService: AuthenticatedUser
-  AuthService-->>Middleware: ActorContext
-  Middleware->>Middleware: req.actor = actor
+  AuthService-->>Middleware: AuthenticatedUser
+  Middleware->>Middleware: req.authenticatedUser = authenticatedUser
+  Middleware->>Middleware: req.actor = createActorContext(authenticatedUser)
   Middleware->>Apollo: next()
   Apollo->>ContextFactory: context({ req })
+  ContextFactory->>ContextFactory: requireAuthenticatedUser(req)
   ContextFactory->>ContextFactory: requireActor(req)
-  ContextFactory-->>Apollo: { req, actor }
+  ContextFactory-->>Apollo: { req, authenticatedUser, actor }
   Apollo->>Resolver: me(@Context() context)
-  Resolver->>Mapper: toAuthenticatedUserGql(context.actor)
+  Resolver->>Mapper: toAuthenticatedUserGql(context.authenticatedUser)
   Mapper-->>Resolver: AuthenticatedUserGql
   Resolver-->>Apollo: AuthenticatedUserGql
   Apollo-->>Client: GraphQL response
@@ -55,7 +57,8 @@ Current code anchors:
 - `src/presentation/graphql/movie-reservations-graphql.module.ts` applies
   `GraphqlAuthenticationMiddleware` to the `graphql` route.
 - `src/presentation/graphql/graphql-authentication.middleware.ts` reads the
-  bearer token and attaches `req.actor`.
+  bearer token and attaches `req.authenticatedUser` plus the smaller
+  `req.actor`.
 - `src/presentation/graphql/graphql-context.ts` defines the request and GraphQL
   context shapes.
 - `src/presentation/graphql/movie-reservations.resolver.ts` receives the context
@@ -82,14 +85,16 @@ sequenceDiagram
 
   alt authMode is local-fixed-user
     Manager-->>AuthService: fixed AuthenticatedUser
-    AuthService-->>Middleware: ActorContext
-    Middleware->>Request: attach actor to req.actor
+    AuthService-->>Middleware: AuthenticatedUser
+    Middleware->>Request: attach identity to req.authenticatedUser
+    Middleware->>Request: attach minimal actor to req.actor
   else authMode is local-jwt
     Manager->>TokenClient: validate token
     TokenClient-->>Manager: token claims
     Manager-->>AuthService: AuthenticatedUser
-    AuthService-->>Middleware: ActorContext
-    Middleware->>Request: attach actor to req.actor
+    AuthService-->>Middleware: AuthenticatedUser
+    Middleware->>Request: attach identity to req.authenticatedUser
+    Middleware->>Request: attach minimal actor to req.actor
   else authentication fails
     Manager--x AuthService: AuthenticationError
     AuthService--x Middleware: AuthenticationError
@@ -99,7 +104,9 @@ sequenceDiagram
 
 The key learning point: TypeScript says `req.actor` may exist, but only runtime
 code can actually put the actor there. The middleware is the runtime step that
-does it.
+does it. `req.authenticatedUser` keeps the full authenticated profile for
+presentation needs such as `me`; `req.actor` keeps the smaller business/security
+context passed into application use cases.
 
 ## Framework Extension Sequence
 
@@ -146,8 +153,8 @@ sequenceDiagram
 Current status of those extension points:
 
 - Middleware exists today for authentication.
-- The GraphQL context factory exists today and copies `req.actor` into
-  resolver-friendly context.
+- The GraphQL context factory exists today and copies `req.authenticatedUser`
+  and `req.actor` into resolver-friendly context.
 - Guards, pipes, interceptors, exception filters, and field middleware are shown
   as future extension points. They are not part of the current request path yet.
 
@@ -158,6 +165,7 @@ In `AppModule`, the context function is registered with Apollo through Nest:
 ```ts
 context: ({ req }: { req: GraphqlHttpRequest }): MovieReservationGraphqlContext => ({
   req,
+  authenticatedUser: requireAuthenticatedUser(req),
   actor: requireActor(req),
 }),
 ```
@@ -173,9 +181,12 @@ That means:
 
 - The input object must have a `req` property.
 - `req` is typed as `GraphqlHttpRequest`.
-- The middleware must already have attached `req.actor`.
+- The middleware must already have attached `req.authenticatedUser` and
+  `req.actor`.
+- `requireAuthenticatedUser(req)` is a runtime guard for the full authenticated
+  identity used by presentation code such as the `me` query.
 - `requireActor(req)` is a runtime guard. If `req.actor` is missing, the request
-  fails instead of silently creating an invalid context.
+  fails instead of silently creating an invalid application actor context.
 - The returned `MovieReservationGraphqlContext` is what resolvers receive through
   `@Context()`.
 
@@ -185,8 +196,9 @@ per-request context object that GraphQL resolvers can use.
 ## Clean Architecture Business Sequence
 
 This is the shape business requests should follow after Apollo has selected the
-resolver. The current `me` query only maps `context.actor`, but movie and
-reservation operations should flow through the application layer like this.
+resolver. The current `me` query maps `context.authenticatedUser`, while movie
+and reservation operations should pass only `context.actor` into the application
+layer like this.
 
 ```mermaid
 sequenceDiagram
@@ -251,11 +263,12 @@ The current path is:
 2. Nest runs `GraphqlAuthenticationMiddleware` for the `graphql` route.
 3. The middleware extracts the bearer token and calls `AuthenticationService`.
 4. `AuthenticationService` delegates to the configured authentication manager.
-5. The middleware stores the result on `req.actor`.
+5. The middleware stores the full identity on `req.authenticatedUser` and the
+   smaller actor context on `req.actor`.
 6. Apollo calls the configured context function.
-7. The context function returns `{ req, actor }`.
+7. The context function returns `{ req, authenticatedUser, actor }`.
 8. `MovieReservationsResolver.me()` receives that context through `@Context()`.
-9. The resolver maps `context.actor` to the GraphQL response model.
+9. The resolver maps `context.authenticatedUser` to the GraphQL response model.
 
 As more business operations are added, step 9 should stay thin: the resolver
 should map GraphQL input, call an application service, then map the application

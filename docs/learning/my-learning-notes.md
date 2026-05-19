@@ -39,3 +39,9 @@ curl -sS -X POST http://127.0.0.1:3000/graphql -H "content-type: application/jso
 ```
 curl -sS http://127.0.0.1:3000/health
 ```
+
+Day 5
+- why do we need a monorepo
+- monorepo vs rust monorepo
+- how to deal with workspaces
+- basics of zod and parsing of env var settings

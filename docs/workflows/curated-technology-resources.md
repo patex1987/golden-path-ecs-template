@@ -6,7 +6,7 @@ The package manifests are the source of truth for versions used in this reposito
 
 ## TypeScript And Node.js
 
-Purpose: application code in `service/`, infrastructure code in `infra/`, and shared runtime behavior.
+Purpose: application code in `movie-reservation-service/`, infrastructure code in `ecs-infra/`, and shared runtime behavior.
 
 - TypeScript Handbook: https://www.typescriptlang.org/docs/
 - TSConfig Reference: https://www.typescriptlang.org/tsconfig/

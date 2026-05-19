@@ -73,7 +73,7 @@ The platform should not own business logic.
 
 ## First Golden Path Consumer
 
-The first consumer is this repo's `service/` app.
+The first consumer is this repo's `movie-reservation-service/` app.
 
 It should prove:
 

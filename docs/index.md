@@ -17,6 +17,7 @@ Current documents:
 
 - [architecture.md](architecture/architecture.md) - current system architecture and target direction.
 - [architecture-decisions.md](architecture/architecture-decisions.md) - ADR-style decision log and tradeoffs.
+- [graphql-request-flow.md](architecture/graphql-request-flow.md) - GraphQL request path through NestJS, Apollo, middleware, context, resolvers, and clean architecture layers.
 - [golden-path.md](architecture/golden-path.md) - the opinionated service path this template should provide.
 - [platform-api.md](architecture/platform-api.md) - future platform-facing API and CDK construct ideas.
 
@@ -42,6 +43,7 @@ Use this folder for material whose primary job is teaching or memory support, no
 Current documents:
 
 - [my-learning-notes.md](learning/my-learning-notes.md) - chronological personal learning notes.
+- [graphql-context-factory-notes.md](learning/graphql-context-factory-notes.md) - notes on Apollo GraphQL context creation and request enrichment.
 - [ts-cdk-learning-path.md](learning/ts-cdk-learning-path.md) - TypeScript and CDK study path.
 - [typescript-docstrings-and-generated-docs.md](learning/typescript-docstrings-and-generated-docs.md) - notes on TypeScript documentation comments and generated docs.
 - [vitest-cheat-sheet.md](learning/vitest-cheat-sheet.md) - Vitest notes from a pytest mental model.

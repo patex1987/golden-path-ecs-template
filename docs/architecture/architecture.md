@@ -49,14 +49,14 @@ The same app should not need a different architecture for every runtime target. 
 
 ## Application Layer
 
-The first application is `service/`.
+The first application is `movie-reservation-service/`.
 
 Target framework: NestJS.
 
 Initial modules:
 
 - `HealthModule` for `/health` and `/ready`
-- `BookingsGraphqlModule` today, eventually renamed around movie reservation operations
+- `MovieReservationsGraphqlModule` for the current movie reservation GraphQL boundary
 
 The service keeps NestJS at the outer edge. Domain types, application services,
 and in-memory repository adapters are plain TypeScript; Nest modules and
@@ -101,7 +101,7 @@ Keep health checks as REST endpoints. Load balancers and orchestrators understan
 
 ## Infrastructure Layer
 
-The `infra/` workspace owns AWS infrastructure through CDK.
+The `ecs-infra/` workspace owns AWS infrastructure through CDK.
 
 The first AWS target is ECS/Fargate behind an Application Load Balancer.
 
@@ -170,7 +170,7 @@ Expected responsibilities:
 
 Target applications:
 
-- `golden-path-ecs-template/service`
+- `golden-path-ecs-template/movie-reservation-service`
 - `/home/patex1987/development/yoga-studio-api`
 - `/home/patex1987/development/python-agent-with-idp`
 
