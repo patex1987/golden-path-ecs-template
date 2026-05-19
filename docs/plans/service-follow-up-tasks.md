@@ -7,6 +7,8 @@ This file tracks intentional leftovers from the current movie reservation servic
 - Add the Deliverable 4 polling API: `movies`, `movie`, `screenings`, `screening`, `requestReservation`, `reservationRequest`, and `reservation`.
 - Keep `movieProviderId` out of normal GraphQL inputs. Tenant/provider identity should continue to come from `ActorContext`.
 - Add mapper tests once GraphQL models for movies, screenings, reservations, and reservation requests exist.
+- Add owner-only and cross-provider authorization coverage for the Deliverable 4 GraphQL reservation operations. Cover `reservationRequest(id)` and `reservation(id)` for tenant-admin, tenant-scope, owner, non-owner, and other-provider actors.
+- Review the Deliverable 4 `screenings` seat-loading strategy before the Postgres adapter lands. Decide whether to use GraphQL DataLoader, a batch repository method, a read-model query, or another approach to avoid per-screening lookups with durable persistence.
 - Revisit `test/schema.test.ts` once the GraphQL API grows. The current string checks are acceptable for the PoC, but later schema verification may be removed, replaced with schema snapshots, or changed to parse the schema structurally.
 - Prefer ISO 8601 UTC timestamp strings for API and persistence boundaries, for example `2026-05-18T08:30:00.000Z`. Add explicit validation or a branded timestamp type before timestamps become caller-provided input.
 - Make reservation request state transitions explicit in one place before the workflow grows. A small transition map or transition engine would make the allowed state machine visible at a glance instead of spreading the rules across individual transition functions.
