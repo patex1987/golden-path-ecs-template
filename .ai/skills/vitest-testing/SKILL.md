@@ -5,7 +5,7 @@ description: Use when creating, refactoring, reviewing, or explaining TypeScript
 
 # Vitest Testing
 
-Use this skill to make TypeScript tests in `service/` behavior-focused, readable, and aligned with the project's fake-first testing preferences.
+Use this skill to make TypeScript tests in `movie-reservation-service/` behavior-focused, readable, and aligned with the project's fake-first testing preferences.
 
 Pair with `.ai/rules/teaching-mode.md` when explaining testing concepts. Pair with `.ai/skills/typescript/SKILL.md` when adding or refactoring test types, fake implementations, or dependency interfaces. Pair with `.ai/skills/nestjs/SKILL.md` for NestJS module, resolver, controller, or e2e tests.
 
@@ -50,13 +50,13 @@ Recommended growth path:
 1. Inline setup inside one test.
 2. Local helper function inside one test file.
 3. `beforeEach` inside one `describe` block.
-4. Shared fake or factory under `service/test/support/` when reused across files.
+4. Shared fake or factory under `movie-reservation-service/test/support/` when reused across files.
 5. Vitest `test.extend` fixture only when fixture-style setup is reused and improves clarity.
 
 Suggested layout when duplication exists:
 
 ```text
-service/test/
+movie-reservation-service/test/
   support/
     factories/
       booking.factory.ts

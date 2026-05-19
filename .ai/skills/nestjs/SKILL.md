@@ -3,7 +3,7 @@ name: nestjs
 description: Use when implementing, refactoring, or explaining NestJS service code, including controllers, modules, providers, GraphQL resolvers, DTOs, validation, and tests; pair with clean-architecture for layer boundaries.
 ---
 
-Use this skill when the task involves NestJS application code in `service/`, especially while converting the service from the previous Fastify shape to NestJS.
+Use this skill when the task involves NestJS application code in `movie-reservation-service/`, especially while converting the service from the previous Fastify shape to NestJS.
 
 When this skill applies to service structure or dependency boundaries, read `.ai/skills/clean-architecture/SKILL.md` and use that as the source of truth for layers. Read `.ai/skills/typescript/SKILL.md` when the work touches TypeScript types, signatures, or module boundaries.
 
@@ -34,13 +34,13 @@ src/
       health.controller.ts
       health.module.ts
     graphql/
-      bookings.resolver.ts
-      bookings-graphql.module.ts
+      movie-reservations.resolver.ts
+      movie-reservations-graphql.module.ts
       models/
-        booking.model.ts
-        booking-sync-job.model.ts
+        movie.gql.ts
+        reservation-request.gql.ts
       inputs/
-        request-booking-sync.input.ts
+        request-reservation.input.ts
 ```
 
 For very small first steps, create only the folders needed by the current feature, but do not place business behavior directly in controllers or resolvers.
@@ -91,7 +91,7 @@ Avoid creating a large common module before the first concrete features need it.
 ## Testing
 
 - Follow Arrange, Act, Assert.
-- Name test variables clearly, such as `inputBookingId`, `actualResponse`, and `expectedBody`.
+- Name test variables clearly, such as `inputReservationId`, `actualResponse`, and `expectedBody`.
 - Unit test domain objects and use cases without starting Nest.
 - Test controllers and resolvers through Nest testing utilities when framework behavior matters.
 - Add acceptance or e2e tests for each API module once the module has behavior worth protecting.
@@ -99,8 +99,8 @@ Avoid creating a large common module before the first concrete features need it.
 
 ## Repository Teaching Notes
 
-- Tie explanations to the current files in `service/`.
+- Tie explanations to the current files in `movie-reservation-service/`.
 - Explain Nest dependency injection through concrete providers and modules.
 - Explain decorator metadata when adding GraphQL or validation decorators.
 - Call out when a TypeScript type is compile-time only and when a class/decorator exists for runtime behavior.
-- Keep the first NestJS conversion small: app module, health/readiness controller, booking use cases, an in-memory repository, and one GraphQL resolver.
+- Keep the first NestJS conversion small: app module, health/readiness controller, movie reservation use cases, an in-memory repository, local auth wiring, and one GraphQL resolver.

@@ -26,7 +26,7 @@ Use this skill when the task is mainly about understanding, improving, or teachi
 
 This project uses TypeScript in two different ways:
 
-- application code in `service/`
-- infrastructure code in `infra/` through AWS CDK
+- application code in `movie-reservation-service/`
+- infrastructure code in `ecs-infra/` through AWS CDK
 
 When helping, explain whether a TypeScript concept is general language behavior or something specific to the CDK library design.
