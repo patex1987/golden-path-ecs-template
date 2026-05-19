@@ -2,6 +2,11 @@ node_modules/
 dist/
 coverage/
 cdk.out/
+.claude/
+.codex/
+.cursor/
+.gemini/
+.roo/
 .env
 .env.*
 *.local.env
