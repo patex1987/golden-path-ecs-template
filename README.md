@@ -112,7 +112,7 @@ Use a lightweight movie reservation concept to make the example feel operational
 
 - GraphQL `movies` and `screenings` return fake catalog data
 - GraphQL `requestReservation` creates an async reservation request
-- GraphQL `reservationRequest(id)` lets a client poll status
+- GraphQL `reservationRequestById(id)` lets a client poll status
 - a future worker processes reservation requests asynchronously
 - logs, traces, and metrics show operational state
 

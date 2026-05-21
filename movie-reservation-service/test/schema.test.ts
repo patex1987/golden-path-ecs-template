@@ -37,7 +37,9 @@ describe('generated GraphQL schema', () => {
     expect(schema).toContain(
       'requestReservation(input: RequestReservationInput!): ReservationRequest!',
     );
-    expect(schema).toContain('reservationRequest(id: ID!): ReservationRequest');
+    expect(schema).toContain(
+      'reservationRequestById(id: ID!): ReservationRequest',
+    );
     expect(schema).toContain('reservation(id: ID!): Reservation');
     expect(schema).toContain('type Movie');
     expect(schema).toContain('type Screening');

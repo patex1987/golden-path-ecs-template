@@ -257,8 +257,8 @@ describe('movie reservation GraphQL polling API with local-fixed-user auth', () 
     const pollResponse = await request(app.getHttpServer())
       .post('/graphql')
       .send({
-        query: `query ReservationRequest($id: ID!) {
-          reservationRequest(id: $id) {
+        query: `query ReservationRequestById($id: ID!) {
+          reservationRequestById(id: $id) {
             id
             screeningId
             seatIds
@@ -273,7 +273,7 @@ describe('movie reservation GraphQL polling API with local-fixed-user auth', () 
 
     expect(pollResponse.status).toBe(200);
     expect(pollResponse.body.errors).toBeUndefined();
-    expect(pollResponse.body.data.reservationRequest).toEqual({
+    expect(pollResponse.body.data.reservationRequestById).toEqual({
       id: reservationRequestId,
       screeningId: 'screening-aurora-1',
       seatIds: ['seat-aurora-1-a3'],

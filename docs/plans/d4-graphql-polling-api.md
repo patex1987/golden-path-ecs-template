@@ -6,7 +6,7 @@ Add the first movie reservation GraphQL polling API on top of the existing movie
 
 ## 2. Goals
 
-- Expose `movies`, `screenings`, `requestReservation`, `reservationRequest`, and `reservation`.
+- Expose `movies`, `screenings`, `requestReservation`, `reservationRequestById`, and `reservation`.
 - Keep `movieProviderId` out of normal GraphQL inputs and derive tenant scope from `ActorContext`.
 - Keep GraphQL classes, decorators, and input models in the presentation layer.
 - Add e2e and schema coverage before implementation.
@@ -30,7 +30,7 @@ Add the first movie reservation GraphQL polling API on top of the existing movie
 
 ### Confirmed Requirements
 
-- GraphQL e2e covers `movies`, `screenings`, `requestReservation`, `reservationRequest`, and `reservation`.
+- GraphQL e2e covers `movies`, `screenings`, `requestReservation`, `reservationRequestById`, and `reservation`.
 - Schema test proves old booking fields are gone and movie reservation fields exist.
 - Commands and queries pass `ActorContext` into application services.
 
@@ -38,7 +38,7 @@ Add the first movie reservation GraphQL polling API on top of the existing movie
 
 - `requestReservation` should create a `REQUESTED` request and return immediately; D5 will process it.
 - `screenings(movieId)` may filter provider-scoped screenings by movie id.
-- `reservationRequest(id)` follows the same provider/owner/admin placeholder authorization style as reservations.
+- `reservationRequestById(id)` follows the same provider/owner/admin placeholder authorization style as reservations.
 
 ### Open Questions
 
@@ -70,7 +70,7 @@ GraphQL adds:
 
 - `movies: [Movie!]!`
 - `screenings(movieId: ID): [Screening!]!`
-- `reservationRequest(id: ID!): ReservationRequest`
+- `reservationRequestById(id: ID!): ReservationRequest`
 - `reservation(id: ID!): Reservation`
 - `requestReservation(input: RequestReservationInput!): ReservationRequest!`
 

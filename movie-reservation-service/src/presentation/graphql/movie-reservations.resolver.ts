@@ -50,6 +50,7 @@ export class MovieReservationsResolver {
     return movies.map(toMovieGql);
   }
 
+  @Reflect.metadata('design:paramtypes', [Object, String])
   @Query(() => [ScreeningGql])
   async screenings(
     @Context() context: MovieReservationGraphqlContext,
@@ -76,10 +77,12 @@ export class MovieReservationsResolver {
     );
   }
 
+  @Reflect.metadata('design:paramtypes', [Object, RequestReservationInputGql])
   @Mutation(() => ReservationRequestGql)
   async requestReservation(
     @Context() context: MovieReservationGraphqlContext,
-    @Args('input') input: RequestReservationInputGql,
+    @Args('input', { type: () => RequestReservationInputGql })
+    input: RequestReservationInputGql,
   ): Promise<ReservationRequestGql> {
     const reservationRequest =
       await this.movieReservationsService.requestReservation(context.actor, {
@@ -90,8 +93,9 @@ export class MovieReservationsResolver {
     return toReservationRequestGql(reservationRequest);
   }
 
+  @Reflect.metadata('design:paramtypes', [Object, String])
   @Query(() => ReservationRequestGql, { nullable: true })
-  async reservationRequest(
+  async reservationRequestById(
     @Context() context: MovieReservationGraphqlContext,
     @Args('id', { type: () => ID }) id: string,
   ): Promise<ReservationRequestGql | null> {
@@ -106,6 +110,7 @@ export class MovieReservationsResolver {
       : toReservationRequestGql(reservationRequest);
   }
 
+  @Reflect.metadata('design:paramtypes', [Object, String])
   @Query(() => ReservationGql, { nullable: true })
   async reservation(
     @Context() context: MovieReservationGraphqlContext,

@@ -26,7 +26,7 @@ type Query {
   me: AuthenticatedUser!
   movies: [Movie!]!
   reservation(id: ID!): Reservation
-  reservationRequest(id: ID!): ReservationRequest
+  reservationRequestById(id: ID!): ReservationRequest
   screenings(movieId: ID): [Screening!]!
 }
 

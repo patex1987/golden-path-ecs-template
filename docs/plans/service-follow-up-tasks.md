@@ -4,12 +4,12 @@ This file tracks intentional leftovers from the current movie reservation servic
 
 ## Movie Reservation GraphQL API
 
-- Add the Deliverable 4 polling API: `movies`, `movie`, `screenings`, `screening`, `requestReservation`, `reservationRequest`, and `reservation`.
+- Add the Deliverable 4 polling API: `movies`, `movie`, `screenings`, `screening`, `requestReservation`, `reservationRequestById`, and `reservation`.
 - Keep `movieProviderId` out of normal GraphQL inputs. Tenant/provider identity should continue to come from `ActorContext`.
 - Add mapper tests once GraphQL models for movies, screenings, reservations, and reservation requests exist.
-- Add owner-only and cross-provider authorization coverage for the Deliverable 4 GraphQL reservation operations. Cover `reservationRequest(id)` and `reservation(id)` for tenant-admin, tenant-scope, owner, non-owner, and other-provider actors.
+- Add owner-only and cross-provider authorization coverage for the Deliverable 4 GraphQL reservation operations. Cover `reservationRequestById(id)` and `reservation(id)` for tenant-admin, tenant-scope, owner, non-owner, and other-provider actors.
 - Add explicit GraphQL e2e coverage for identity propagation: JWT claims should become `authenticatedUser`, then `ActorContext`, then tenant-scoped service/repository calls. Include a case proving GraphQL input cannot override the authenticated `movieProviderId`.
-- Decide and implement the GraphQL read-error contract for protected reservation resources soon. `reservationRequest(id)` and `reservation(id)` currently return `null` for both not-found and unauthorized cases; choose whether the API should keep that non-leaking behavior, return explicit `FORBIDDEN`/`NOT_FOUND` GraphQL errors, or expose a typed result object.
+- Decide and implement the GraphQL read-error contract for protected reservation resources soon. `reservationRequestById(id)` and `reservation(id)` currently return `null` for both not-found and unauthorized cases; choose whether the API should keep that non-leaking behavior, return explicit `FORBIDDEN`/`NOT_FOUND` GraphQL errors, or expose a typed result object.
 - Review the Deliverable 4 `screenings` seat-loading strategy before the Postgres adapter lands. Decide whether to use GraphQL DataLoader, a batch repository method, a read-model query, or another approach to avoid per-screening lookups with durable persistence.
 - Replace generic `Error` throws in movie reservation application use cases with explicit application/domain errors and map them deliberately at the GraphQL boundary. Start with `MovieReservationsService.requestReservation`, where missing screenings and invalid seat selections currently throw generic errors.
 - Revisit `test/schema.test.ts` once the GraphQL API grows. The current string checks are acceptable for the PoC, but later schema verification may be removed, replaced with schema snapshots, or changed to parse the schema structurally.

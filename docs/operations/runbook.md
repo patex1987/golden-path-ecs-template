@@ -61,7 +61,7 @@ Example polling query:
 
 ```graphql
 query ReservationRequest($id: ID!) {
-  reservationRequest(id: $id) {
+  reservationRequestById(id: $id) {
     id
     status
     reservationId

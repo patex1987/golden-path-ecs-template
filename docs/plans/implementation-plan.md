@@ -479,7 +479,7 @@ This matters because the goal is not only to have a working template. The goal i
 
 1. Reshape the current booking domain into movie reservation concepts.
 2. Add movie/screening/reservation GraphQL models and queries.
-3. Add `requestReservation` and `reservationRequest` polling.
+3. Add `requestReservation` and `reservationRequestById` polling.
 4. Keep the in-memory repository until the workflow is clear.
 5. Update tests around the new domain and GraphQL contract.
 6. Add Dockerfile and Docker Compose only after the local service behavior is stable.

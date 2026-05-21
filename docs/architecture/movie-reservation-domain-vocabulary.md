@@ -78,7 +78,7 @@ supports an asynchronous workflow:
 ```text
 client asks to reserve seats
 service creates ReservationRequest in REQUESTED state
-client polls reservationRequest(id)
+client polls reservationRequestById(id)
 processor later confirms, rejects, or fails the request
 ```
 
