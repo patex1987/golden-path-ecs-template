@@ -24,6 +24,7 @@ This roadmap is intentionally a breaking replacement of the current booking-sync
 - Add Postgres and Knex migrations through Docker Compose in a separate deliverable.
 - Add OpenTelemetry instrumentation, metrics, structured logs, Tempo, Loki, and Grafana locally.
 - Add a React + Vite frontend demonstrator for the reservation workflow and trace/log correlation.
+- Add a small GitHub Actions CI foundation before the platform grows into Docker, ECS, RDS, and worker deliverables.
 - Deploy a cheap first ECS/Fargate service behind an ALB with in-memory state before adding RDS.
 - Add RDS and explicit migration tasks after the first stateless ECS deployment is understood.
 - Add worker/signaling infrastructure after durable state exists.
@@ -37,6 +38,7 @@ This roadmap is intentionally a breaking replacement of the current booking-sync
 - Adding real OIDC/JWT validation in phase 1.
 - Adding payment processing in phase 1.
 - Adding RDS to the first cheap ECS deployment.
+- Adding deployment automation, AWS credentials, Docker image publishing, or multi-provider CI in the first CI foundation.
 - Treating SQS/Rabbit as the source of truth for reservation state.
 - Adding CloudFront, Cloudflare, EKS, RDS, SQS, frontend, and observability all in one step.
 - Hiding AWS or Kubernetes concepts behind abstractions before they are understood.
@@ -45,8 +47,10 @@ This roadmap is intentionally a breaking replacement of the current booking-sync
 
 ## 4. Current State
 
-- The root `package.json` is an npm workspace with `service` and `infra`.
-- `service/` is a NestJS TypeScript application using code-first GraphQL through `@nestjs/graphql` and Apollo.
+- The root `package.json` is an npm workspace with `movie-reservation-service` and `ecs-infra`.
+- The root package does not yet expose a single `npm run ci` command.
+- There is no `.github/workflows` directory and no `.circleci` directory.
+- `movie-reservation-service/` is a NestJS TypeScript application using code-first GraphQL through `@nestjs/graphql` and Apollo.
 - `service/src/app.module.ts` wires `GraphQLModule`, `HealthModule`, and `BookingsGraphqlModule`.
 - `service/src/presentation/http/health.controller.ts` exposes `/health` and `/ready`.
 - `service/src/presentation/graphql/bookings.resolver.ts` exposes `booking`, `bookings`, and `requestBookingSync`.
@@ -54,8 +58,8 @@ This roadmap is intentionally a breaking replacement of the current booking-sync
 - `service/src/infrastructure/repositories/in-memory/in-memory-booking.repository.ts` stores fake bookings and sync jobs in maps.
 - `service/schema.gql` describes the generated GraphQL contract for `Booking`, `BookingSyncJob`, and `requestBookingSync`.
 - Service tests use Vitest and Supertest. Existing coverage includes application service tests, domain tests, mapper tests, schema tests, DI composition tests, health tests, and GraphQL e2e tests.
-- `infra/` is an AWS CDK TypeScript workspace. `infra/lib/infra-stack.ts` is effectively empty.
-- `infra/test/infra.test.ts` contains only the default commented CDK example test.
+- `ecs-infra/` is an AWS CDK TypeScript workspace. `ecs-infra/lib/infra-stack.ts` is effectively empty.
+- `ecs-infra/test/infra.test.ts` contains only the default commented CDK example test.
 - `docs/architecture/architecture.md` already describes the target direction: one frontend demonstrator, one NestJS service, ECS/Fargate, Docker Compose, k3d, and OpenTelemetry.
 - The Python repositories at `/home/patex1987/development/yoga-studio-api`, `/home/patex1987/development/python-agent-with-idp`, and `/home/patex1987/development/throttling_sequencer_webapp` use a useful auth pattern: an auth manager contract, request context enrichment, middleware at the edge, and local/test token validation implementations injected for tests/local development.
 - The observability PoC at `/home/patex1987/development/fastapi_otel_prometheus_grafana_poc` already has Docker Compose examples for an OpenTelemetry Collector, Tempo, Prometheus, and Grafana. The movie platform should reuse or adapt that setup and add Loki for structured logs.
@@ -86,6 +90,7 @@ This roadmap is intentionally a breaking replacement of the current booking-sync
 - GraphQL subscriptions remain on the roadmap but come later than polling and processor basics.
 - Frontend should start with React + Vite; Next.js/SSR is deferred unless server-rendering, BFF behavior, or production auth/session handling becomes necessary.
 - First ECS deployment should be cheap and simple: API container behind ALB with in-memory state.
+- GitHub Actions should provide the first CI foundation with formatting, linting, type checking, tests, build, and CDK synth before deployment automation is added.
 - RDS should be deferred until after the stateless ECS deployment is understood.
 - k3d/Kubernetes should come after the first AWS ECS deployment.
 - Observability should include traces, metrics, and structured logs, not traces only.
@@ -429,6 +434,15 @@ Authorization research candidates:
   - Schema test asserts old booking fields are gone and movie reservation fields exist.
   - `npm -w movie-reservation-service run check`
 
+### Deliverable CI-1: Add GitHub Actions CI Foundation
+
+- Change: Add a root `npm run ci` command and a small GitHub Actions workflow for pull requests and pushes to `main`.
+- Files/modules likely affected: root `package.json`, `.github/workflows/ci.yml`, `README.md`, `docs/index.md`, `docs/plans/github-actions-ci-foundation.md`.
+- Notes: Keep this credential-free and deployment-free. The first workflow should run formatting, linting, type checking, tests, builds, and CDK synth using existing npm workspace scripts.
+- Verification:
+  - `npm run ci`
+  - GitHub Actions passes on the implementation pull request.
+
 ### Deliverable 5: Add In-Process Processor Contract
 
 - Change: Add `ReservationRequestProcessor` contract and in-memory implementation for claiming/processing pending reservation requests.
@@ -550,6 +564,7 @@ Authorization research candidates:
 - Repository integration tests for uniqueness constraints and tenant filtering.
 - Observability smoke tests for trace/log correlation and metrics.
 - CDK assertion tests for key ECS, ALB, health check, IAM, log group, RDS, migration task, and queue resources as they are introduced.
+- CI workflow check for pull requests and pushes to `main`, starting with formatting, linting, type checking, tests, build, and CDK synth.
 - Docker Compose smoke tests for service, database, collector, Tempo, Loki, Prometheus, and Grafana.
 - k3d smoke tests for Deployment, Service, Ingress, probes, and telemetry after k3d exists.
 - AWS smoke tests for ALB response, ECS running count, target group health, logs, and migration task success.
@@ -557,6 +572,7 @@ Authorization research candidates:
 Expected commands after relevant phases:
 
 ```bash
+npm run ci
 npm -w movie-reservation-service run check
 npm -w ecs-infra run build
 npm -w ecs-infra test
@@ -572,6 +588,7 @@ This is a learning repo, so rollout means keeping each phase reversible, reviewa
 
 - First rename workspaces as a mechanical change.
 - Then replace booking with movie reservation as a breaking API change.
+- Add GitHub Actions CI before adding Docker, ECS, RDS, workers, or deployment automation.
 - Keep `/health` and `/ready` stable throughout.
 - Keep GraphQL polling before subscriptions.
 - Keep auth contract, `local-fixed-user`, and `local-jwt` modes before real OIDC.
@@ -594,6 +611,7 @@ Rollback/removal guidance:
 - ECS phase rollback should document CDK destroy steps and cost cleanup.
 - RDS phase rollback should include snapshot/removal decisions before deployment.
 - Worker/signaling rollback should leave polling and DB-backed request status intact.
+- CI rollback is a git revert of the workflow and root script; it should not affect runtime behavior or deployed infrastructure.
 
 ## 15. Risks and Mitigations
 
@@ -601,6 +619,7 @@ Rollback/removal guidance:
 |---|---:|---:|---|
 | Scope grows too fast | High | High | Keep deliverables small and reviewable; do not combine phase 1 with Postgres or ECS. |
 | Workspace rename creates noisy diffs | Medium | High | Do rename as its own deliverable before domain edits. |
+| CI blocks work because the first workflow is too broad | Medium | Medium | Keep the first workflow to local-equivalent checks only; defer deploy, Docker publishing, security gates, and matrices. |
 | Auth becomes too real too early | Medium | Medium | Add contract and fake implementation first; defer OIDC/Cognito. |
 | Production runs with local auth wiring | High | Low | Block local auth modes in production config now; later exclude local/fake auth implementations from production images and add CI checks that production artifacts cannot resolve them. |
 | Authorization placeholder becomes permanent | High | Medium | Track explicit authorization research deliverable and ADR. |
@@ -623,6 +642,7 @@ Rollback/removal guidance:
 - Tenant/provider identity comes from auth context, not ordinary GraphQL input.
 - At least two movie providers are seeded and tenant isolation is tested.
 - A multiple-seat reservation request can be created and polled.
+- GitHub Actions runs the root CI command on pull requests and pushes to `main`.
 - An in-process processor contract can confirm or reject requests deterministically.
 - Local Postgres persistence works through Knex migrations in a later deliverable.
 - Logs, traces, and metrics are visible locally and can be correlated for at least one GraphQL request.
@@ -639,6 +659,7 @@ Rollback/removal guidance:
 - [ ] Non-goals are explicit.
 - [ ] Existing code conventions were checked.
 - [ ] Workspace rename is separated from domain implementation.
+- [ ] CI foundation is small, credential-free, and based on existing npm scripts.
 - [ ] Alternatives were considered.
 - [ ] Auth and authorization implications were reviewed.
 - [ ] Tenant scoping is modeled explicitly.
@@ -693,6 +714,7 @@ Relevant starting files/modules:
 - Current infra tests: infra/test/infra.test.ts
 
 Expected verification commands after the relevant rename/update:
+- npm run ci
 - npm -w movie-reservation-service run check
 - npm -w ecs-infra run build
 - npm -w ecs-infra test

@@ -31,9 +31,11 @@ Use this folder when a document describes planned work, sequencing, risks, or ac
 Current documents:
 
 - [d4-graphql-polling-api.md](plans/d4-graphql-polling-api.md) - implementation plan for the movie reservation GraphQL polling API.
+- [github-actions-ci-foundation.md](plans/github-actions-ci-foundation.md) - implementation plan for the first small GitHub Actions CI workflow.
 - [implementation-plan.md](plans/implementation-plan.md) - overall learning and build plan.
 - [movie-reservation-platform-roadmap.md](plans/movie-reservation-platform-roadmap.md) - roadmap for the movie reservation platform slice.
 - [nestjs-service-migration.md](plans/nestjs-service-migration.md) - completed/active migration plan for moving the service to NestJS.
+- [platform-follow-up-tasks.md](plans/platform-follow-up-tasks.md) - platform, CI/CD, infrastructure workflow, and delivery-system follow-up tasks.
 - [service-di-composition-breakdown.md](plans/service-di-composition-breakdown.md) - post-D4 plan for splitting NestJS dependency wiring into typed composition profiles and focused provider groups.
 - [service-follow-up-tasks.md](plans/service-follow-up-tasks.md) - intentional leftovers from the service migration.
 
@@ -71,7 +73,7 @@ Current documents:
 
 - [ai-review-workflow.md](workflows/ai-review-workflow.md) - how the repository's AI review agents are organized and used.
 - [curated-technology-resources.md](workflows/curated-technology-resources.md) - expanded trusted technology references for AI and human contributors.
-- [git-workflow.md](workflows/git-workflow.md) - branch naming and issue-linked branch workflow.
+- [git-workflow.md](workflows/git-workflow.md) - branch naming, commit messages, squash merges, and issue-linked workflow.
 
 ## `scratch/`
 
