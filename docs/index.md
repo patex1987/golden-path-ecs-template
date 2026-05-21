@@ -19,6 +19,7 @@ Current documents:
 - [architecture-decisions.md](architecture/architecture-decisions.md) - ADR-style decision log and tradeoffs.
 - [graphql-request-flow.md](architecture/graphql-request-flow.md) - GraphQL request path through NestJS, Apollo, middleware, context, resolvers, and clean architecture layers.
 - [golden-path.md](architecture/golden-path.md) - the opinionated service path this template should provide.
+- [movie-reservation-domain-vocabulary.md](architecture/movie-reservation-domain-vocabulary.md) - shared domain vocabulary for movie providers, auditoriums, screenings, seats, reservation requests, and reservations.
 - [platform-api.md](architecture/platform-api.md) - future platform-facing API and CDK construct ideas.
 
 ## `plans/`
@@ -33,6 +34,7 @@ Current documents:
 - [implementation-plan.md](plans/implementation-plan.md) - overall learning and build plan.
 - [movie-reservation-platform-roadmap.md](plans/movie-reservation-platform-roadmap.md) - roadmap for the movie reservation platform slice.
 - [nestjs-service-migration.md](plans/nestjs-service-migration.md) - completed/active migration plan for moving the service to NestJS.
+- [service-di-composition-breakdown.md](plans/service-di-composition-breakdown.md) - post-D4 plan for splitting NestJS dependency wiring into typed composition profiles and focused provider groups.
 - [service-follow-up-tasks.md](plans/service-follow-up-tasks.md) - intentional leftovers from the service migration.
 
 ## `learning/`

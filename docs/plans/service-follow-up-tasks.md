@@ -8,9 +8,13 @@ This file tracks intentional leftovers from the current movie reservation servic
 - Keep `movieProviderId` out of normal GraphQL inputs. Tenant/provider identity should continue to come from `ActorContext`.
 - Add mapper tests once GraphQL models for movies, screenings, reservations, and reservation requests exist.
 - Add owner-only and cross-provider authorization coverage for the Deliverable 4 GraphQL reservation operations. Cover `reservationRequest(id)` and `reservation(id)` for tenant-admin, tenant-scope, owner, non-owner, and other-provider actors.
+- Add explicit GraphQL e2e coverage for identity propagation: JWT claims should become `authenticatedUser`, then `ActorContext`, then tenant-scoped service/repository calls. Include a case proving GraphQL input cannot override the authenticated `movieProviderId`.
+- Decide and implement the GraphQL read-error contract for protected reservation resources soon. `reservationRequest(id)` and `reservation(id)` currently return `null` for both not-found and unauthorized cases; choose whether the API should keep that non-leaking behavior, return explicit `FORBIDDEN`/`NOT_FOUND` GraphQL errors, or expose a typed result object.
 - Review the Deliverable 4 `screenings` seat-loading strategy before the Postgres adapter lands. Decide whether to use GraphQL DataLoader, a batch repository method, a read-model query, or another approach to avoid per-screening lookups with durable persistence.
+- Replace generic `Error` throws in movie reservation application use cases with explicit application/domain errors and map them deliberately at the GraphQL boundary. Start with `MovieReservationsService.requestReservation`, where missing screenings and invalid seat selections currently throw generic errors.
 - Revisit `test/schema.test.ts` once the GraphQL API grows. The current string checks are acceptable for the PoC, but later schema verification may be removed, replaced with schema snapshots, or changed to parse the schema structurally.
 - Prefer ISO 8601 UTC timestamp strings for API and persistence boundaries, for example `2026-05-18T08:30:00.000Z`. Add explicit validation or a branded timestamp type before timestamps become caller-provided input.
+- Add an explicit GraphQL timestamp contract soon. Replace plain `String` timestamp fields with a `DateTime` scalar or another deliberate timestamp representation, and validate/serialize ISO 8601 UTC consistently.
 - Make reservation request state transitions explicit in one place before the workflow grows. A small transition map or transition engine would make the allowed state machine visible at a glance instead of spreading the rules across individual transition functions.
 - Replace generic domain `Error` throws with custom domain errors before exposing reservation commands. For example, an empty seat selection should raise a specific reservation request validation error that GraphQL, logs, and tests can handle deliberately.
 
@@ -53,7 +57,11 @@ This file tracks intentional leftovers from the current movie reservation servic
 ## Persistence Preparation
 
 - Keep the in-memory repository as a fast fake even after Postgres exists.
+- Make the in-memory repository reject duplicate IDs in constructor seed data, not only during `saveReservationRequest`, so bad fixtures cannot be silently hidden by `Map` overwrites.
 - Add Postgres tables with `movie_provider_id` on tenant-scoped rows in the later Knex deliverable.
+- When reservation processing is added, prevent double-booking with database-backed guarantees such as a transaction plus a unique constraint on confirmed seats, for example `(screening_id, seat_id)`.
+- Decide the D5 processing trigger before adding durable persistence: worker polling, transactional outbox, queue-first processing, or synchronous processing. Use an outbox if saving a reservation request must reliably signal another process.
+- Add idempotency handling for reservation commands before exposing them to retrying clients, so repeated client submissions can be distinguished from conflicting duplicate work.
 
 ## Configuration and Logging
 
