@@ -157,7 +157,7 @@ Status: accepted.
 
 ### Decision
 
-Implement `requestReservation` plus `reservationRequest(id)` polling before adding GraphQL subscriptions.
+Implement `requestReservation` plus `reservationRequestById(id)` polling before adding GraphQL subscriptions.
 
 ### Reason
 

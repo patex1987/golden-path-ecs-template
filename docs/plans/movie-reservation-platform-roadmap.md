@@ -133,7 +133,7 @@ Use a movie reservation domain with these concepts:
 GraphQL should separate commands from queries:
 
 - `requestReservation(input)` accepts a command and returns a `ReservationRequest`.
-- `reservationRequest(id)` lets a client poll command status.
+- `reservationRequestById(id)` lets a client poll command status.
 - `reservation(id)` fetches the final confirmed reservation.
 - `movies`, `movie`, `screenings`, and `screening` support the UI flow.
 
@@ -258,7 +258,7 @@ type Query {
   movies: [Movie!]!
   screening(id: ID!): Screening
   screenings(movieId: ID): [Screening!]!
-  reservationRequest(id: ID!): ReservationRequest
+  reservationRequestById(id: ID!): ReservationRequest
   reservation(id: ID!): Reservation
 }
 
@@ -425,7 +425,7 @@ Authorization research candidates:
 - Files/modules likely affected: `movie-reservation-service/src/presentation/graphql`, `movie-reservation-service/schema.gql`, `movie-reservation-service/test/e2e`, `movie-reservation-service/test/schema.test.ts`.
 - Notes: Commands and queries should pass `ActorContext` into application services.
 - Verification:
-  - GraphQL e2e covers `movies`, `screenings`, `requestReservation`, `reservationRequest`, and `reservation`.
+  - GraphQL e2e covers `movies`, `screenings`, `requestReservation`, `reservationRequestById`, and `reservation`.
   - Schema test asserts old booking fields are gone and movie reservation fields exist.
   - `npm -w movie-reservation-service run check`
 

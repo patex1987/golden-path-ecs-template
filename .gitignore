@@ -19,3 +19,4 @@ cdk.out/
 .DS_Store
 npm-debug.log*
 /schema.gql
+docs/TIL.md
