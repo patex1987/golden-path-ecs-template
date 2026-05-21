@@ -9,7 +9,6 @@ import { ReservationRequestGql } from '../models/reservation-request.gql';
 import { ScreeningGql } from '../models/screening.gql';
 import { SeatGql } from '../models/seat.gql';
 
-
 /**
  * TODO: split the mappers into smaller files
  */
