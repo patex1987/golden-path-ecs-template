@@ -1,0 +1,141 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  service-quality:
+    name: service-quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check formatting
+        run: npm -w movie-reservation-service run format:check
+
+      - name: Run lint checks
+        run: npm -w movie-reservation-service run lint
+
+      - name: Run TypeScript typecheck
+        run: npm -w movie-reservation-service run typecheck
+
+  service-unit-tests:
+    name: service-unit-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs:
+      - service-quality
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run service unit tests
+        run: npm -w movie-reservation-service run test:unit
+
+  service-integration-tests:
+    name: service-integration-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs:
+      - service-quality
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run service integration tests
+        run: npm -w movie-reservation-service run test:integration
+
+  service-build:
+    name: service-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs:
+      - service-quality
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build service
+        run: npm -w movie-reservation-service run build
+
+  infra:
+    name: infra
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs:
+      - service-quality
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build CDK app
+        run: npm -w ecs-infra run build
+
+      - name: Run CDK assertion tests
+        run: npm -w ecs-infra test
+
+      - name: Synthesize CDK app
+        run: npm -w ecs-infra run cdk -- synth

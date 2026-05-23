@@ -8,7 +8,8 @@
   "scripts": {
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces",
-    "lint": "npm run lint --workspaces --if-present"
+    "lint": "npm run lint --workspaces --if-present",
+    "ci": "npm -w movie-reservation-service run ci && npm -w ecs-infra run ci"
   },
   "devDependencies": {
     "aws-cdk": "^2.1112.0"
