@@ -45,3 +45,6 @@ Day 5
 - monorepo vs rust monorepo
 - how to deal with workspaces
 - basics of zod and parsing of env var settings
+
+Day 6
+- learning github actions, making notes to trello
