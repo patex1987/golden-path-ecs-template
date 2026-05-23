@@ -260,6 +260,14 @@ The project should demonstrate:
 
 ---
 
+## CI workflow
+
+Use `npm run ci` from the repository root to run the local CI contract for the service and CDK workspaces. The GitHub Actions workflow uses Node 24 from `.nvmrc` and runs the same categories as separate pull request checks.
+
+See [docs/workflows/ci-workflow.md](docs/workflows/ci-workflow.md) for the CI jobs, required checks, and test category definitions.
+
+---
+
 ## Iterative milestones
 
 ## Milestone 1

@@ -97,6 +97,16 @@ Purpose: formatting, linting, typed linting, and fast local checks.
 - Prettier docs: https://prettier.io/docs/
 - Oxlint docs: https://oxc.rs/docs/guide/usage/linter.html
 
+## GitHub Actions
+
+Purpose: repository CI/CD automation, workflow design, monorepo checks, runners, and pipeline hardening.
+
+- GitHub Actions tutorials: https://docs.github.com/en/actions/tutorials
+- Understanding GitHub Actions: https://docs.github.com/en/actions/get-started/understand-github-actions
+- GitHub Actions CI/CD best practices instruction file: https://github.com/github/awesome-copilot/blob/main/instructions/github-actions-ci-cd-best-practices.instructions.md
+- GitHub Actions workflows, patterns, and best practices: https://dev.to/thesius_code_7a136ae718b7/github-actions-workflows-github-actions-patterns-best-practices-pge
+- GitHub Actions in 2026: monorepo CI/CD and self-hosted runners: https://dev.to/pockit_tools/github-actions-in-2026-the-complete-guide-to-monorepo-cicd-and-self-hosted-runners-1jop
+
 ## Roadmap Technologies
 
 Use these only when the relevant implementation phase starts.

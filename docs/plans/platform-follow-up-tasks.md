@@ -1,0 +1,23 @@
+# Platform Follow-up Tasks
+
+This file tracks platform, CI/CD, infrastructure workflow, and delivery-system follow-ups that are intentionally outside the current implementation slice.
+
+Use `docs/plans/service-follow-up-tasks.md` for service/domain/API leftovers. Use this file for cross-cutting platform and delivery concerns.
+
+## CI/CD Hardening
+
+- Define a dependency audit policy before making audit checks blocking. Decide severity thresholds, dev-dependency handling, exception workflow, and whether to use `npm audit`, GitHub Dependabot alerts, dependency review, or a combination.
+- Revisit GitHub Actions supply-chain hardening. CI-1 pins official actions by major version; future work may require exact SHA pins, allowlisted actions, internal mirrored actions, Dependabot updates for action versions, or policy-as-code checks.
+- Investigate CI caching strategy deeply before adding custom caches. Cover npm cache boundaries, monorepo cache boundaries, Docker layer caching, build artifacts, remote caches, cache poisoning risks, and invalidation policy.
+- Design CI reports and artifact handling. Decide whether to upload test reports, coverage reports, CDK synthesized templates, build outputs, screenshots, Docker logs, and smoke-test reports; define retention and sanitization rules.
+- Add CI observability as a platform concern. Track pipeline health, failure rates by job, flaky tests, queue time, runtime trends, cache hit rates, deployment gate failures, rollback signals, and whether CI/CD emits useful telemetry.
+- Design Docker/Testcontainers e2e and smoke-test waves. Decide how service images move between jobs: rebuild in the e2e job, upload/download image artifacts, or push/pull from a registry such as GitHub Container Registry.
+- Design deployed system/smoke tests for dev, staging, and production-like environments. These may become deployment quality gates, rollback monitors, or operational smoke checks.
+- Revisit path filters, docs-only shortcuts, and fast non-production override pipelines once CI runtime affects developer experience. Consider playground/dev-stage workflows that trade broad validation for quick iteration outside production.
+- Revisit required-check management if the list of GitHub Actions jobs changes often. A future aggregate `ci-success` job may make branch protection easier to maintain.
+- Revisit Node version matrix testing only if the project commits to supporting multiple Node runtime versions.
+
+## Infrastructure Workflow
+
+- Revisit whether `ecs-infra` should split into multiple packages when shared constructs, environment stacks, deployment tooling, or multiple independently owned infra modules exist.
+- Keep CDK synth credential-free in pull-request CI where practical. If future CDK context lookups require AWS credentials, isolate that behavior in a separate deployment-oriented plan.
