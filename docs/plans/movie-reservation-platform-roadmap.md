@@ -437,9 +437,12 @@ Authorization research candidates:
 ### Deliverable CI-1: Add GitHub Actions CI Foundation
 
 - Change: Add a root `npm run ci` command and a small GitHub Actions workflow for pull requests and pushes to `main`.
-- Files/modules likely affected: root `package.json`, `.github/workflows/ci.yml`, `README.md`, `docs/index.md`, `docs/plans/github-actions-ci-foundation.md`.
-- Notes: Keep this credential-free and deployment-free. The first workflow should run formatting, linting, type checking, tests, builds, and CDK synth using existing npm workspace scripts.
+- Files/modules likely affected: root `package.json`, `.nvmrc`, `movie-reservation-service/package.json`, `movie-reservation-service/test/**`, `ecs-infra/package.json`, `.github/workflows/ci.yml`, `README.md`, `docs/index.md`, `docs/workflows/ci-workflow.md`, `docs/plans/github-actions-ci-foundation.md`.
+- Notes: Keep this credential-free and deployment-free. The first workflow should run formatting, linting, type checking, tests, builds, and CDK synth using existing npm workspace scripts. Detailed implementation guidance lives in `docs/plans/github-actions-ci-foundation.md`.
 - Verification:
+  - `npm -w movie-reservation-service run test:unit`
+  - `npm -w movie-reservation-service run test:integration`
+  - `npm -w ecs-infra run ci`
   - `npm run ci`
   - GitHub Actions passes on the implementation pull request.
 
