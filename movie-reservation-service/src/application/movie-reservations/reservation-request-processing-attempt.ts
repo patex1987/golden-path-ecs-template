@@ -31,8 +31,7 @@ export type ReservationRequestProcessingAttempt =
 /**
  * Attempt record for a request that produced a confirmed reservation.
  */
-export interface ConfirmedReservationRequestProcessingAttempt
-  extends ReservationRequestProcessingAttemptBase {
+export interface ConfirmedReservationRequestProcessingAttempt extends ReservationRequestProcessingAttemptBase {
   readonly outcome: 'confirmed';
   readonly reservationId: ReservationId;
 }
@@ -40,8 +39,7 @@ export interface ConfirmedReservationRequestProcessingAttempt
 /**
  * Attempt record for an all-or-nothing rejection caused by a seat conflict.
  */
-export interface RejectedReservationRequestProcessingAttempt
-  extends ReservationRequestProcessingAttemptBase {
+export interface RejectedReservationRequestProcessingAttempt extends ReservationRequestProcessingAttemptBase {
   readonly outcome: 'rejected';
   readonly reason: 'seat-conflict';
   readonly conflictingReservationId: ReservationId;
@@ -53,8 +51,7 @@ export interface RejectedReservationRequestProcessingAttempt
  * Currently, we do not retry these automatically; durable worker phases should add
  * retry policy, claim leases, and dead-letter handling around this outcome.
  */
-export interface FailedReservationRequestProcessingAttempt
-  extends ReservationRequestProcessingAttemptBase {
+export interface FailedReservationRequestProcessingAttempt extends ReservationRequestProcessingAttemptBase {
   readonly outcome: 'failed';
   readonly reason: 'unexpected-error';
 }
