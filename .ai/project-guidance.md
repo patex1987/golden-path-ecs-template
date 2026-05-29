@@ -41,6 +41,7 @@ Run the narrowest useful check while iterating, then run the relevant full check
 - Do not over-engineer early abstractions; extract patterns only after the duplication or boundary is real.
 - The service is NestJS now. Do not introduce Fastify or Express route patterns unless explicitly asked to revisit the HTTP adapter.
 - Keep framework decorators and DI wiring at the edges. Domain types, application services, ports, and repositories should stay plain TypeScript where possible.
+- Place feature-specific dependency interfaces under the application feature that owns the use case, for example `movie-reservation-service/src/application/movie-reservations/ports/`. Infrastructure adapters implement those ports. This keeps dependencies pointing inward and avoids both domain code depending on persistence details and repository god objects with unrelated responsibilities.
 - Use explicit, readable TypeScript types when they improve clarity.
 - Distinguish compile-time TypeScript safety from runtime validation. Use Zod or framework validation at external boundaries.
 - For infrastructure, explain what AWS resource is being modeled and how CDK code maps to deployed infrastructure.

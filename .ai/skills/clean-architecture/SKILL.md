@@ -87,6 +87,20 @@ Orchestrates domain objects for use cases:
     DTOs: Data transfer at boundaries
     Ports: Interfaces for external dependencies
 
+Repository/project convention:
+
+    In this repository, feature-specific ports belong under the application
+    feature that owns the use case, for example
+    src/application/movie-reservations/ports/. Infrastructure adapters implement
+    those ports. This follows the dependency rule: application logic defines the
+    interface it needs, and infrastructure depends inward to satisfy it.
+
+    Do not move every repository-like interface into domain by default. Use a
+    domain-level interface only when the domain model itself needs that contract
+    to express a domain rule. Most persistence, clock, id generation, worker,
+    and external-service dependencies in this project should be application
+    ports.
+
 export class CreateUserUseCase {
   constructor(
     private readonly userRepository: UserRepository,

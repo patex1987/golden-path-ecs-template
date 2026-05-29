@@ -43,6 +43,7 @@ Run the narrowest useful check while iterating, then run the relevant full check
 - Do not over-engineer early abstractions; extract patterns only after the duplication or boundary is real.
 - The service is NestJS now. Do not introduce Fastify or Express route patterns unless explicitly asked to revisit the HTTP adapter.
 - Keep framework decorators and DI wiring at the edges. Domain types, application services, ports, and repositories should stay plain TypeScript where possible.
+- Place feature-specific dependency interfaces under the application feature that owns the use case, for example `movie-reservation-service/src/application/movie-reservations/ports/`. Infrastructure adapters implement those ports. This keeps dependencies pointing inward and avoids both domain code depending on persistence details and repository god objects with unrelated responsibilities.
 - Use explicit, readable TypeScript types when they improve clarity.
 - Distinguish compile-time TypeScript safety from runtime validation. Use Zod or framework validation at external boundaries.
 - For infrastructure, explain what AWS resource is being modeled and how CDK code maps to deployed infrastructure.
@@ -113,6 +114,7 @@ Read the relevant skill file from `.ai/skills/` when the task matches its descri
 - **fastify**: Legacy/revisit-only skill for old Fastify service code. Do not use for current service work unless explicitly asked to revisit the HTTP adapter. (read `.ai/skills/fastify/SKILL.md`)
 - **nestjs**: Use when implementing, refactoring, or explaining NestJS service code, including controllers, modules, providers, GraphQL resolvers, DTOs, validation, and tests; pair with clean-architecture for layer boundaries. (read `.ai/skills/nestjs/SKILL.md`)
 - **principal-engineer-planner**: Use before implementation to inspect the repository, clarify requirements, compare alternatives, identify risks, and produce an implementation-ready plan under docs/plans/. (read `.ai/skills/principal-engineer-planner/SKILL.md`)
+- **programming-kb**: Use to retrieve focused local programming, backend architecture, system design, and implementation knowledge from /home/patex1987/Documents/programming_kb before broad internet search; validate externally when the user asks or the knowledge may be stale. (read `.ai/skills/programming-kb/SKILL.md`)
 - **typescript**: Use when designing or refactoring TypeScript types, function signatures, modules, and application structure. (read `.ai/skills/typescript/SKILL.md`)
 - **vitest-testing**: Use when creating, refactoring, reviewing, or explaining TypeScript tests with Vitest, including fake-first testing, reusable fakes, fixture-like setup, NestJS TestingModule tests, e2e tests, and test categorization. (read `.ai/skills/vitest-testing/SKILL.md`)
 
