@@ -138,8 +138,8 @@ Use a movie reservation domain with these concepts:
 GraphQL should separate commands from queries:
 
 - `requestReservation(input)` accepts a command and returns a `ReservationRequest`.
-- `reservationRequestById(id)` lets a client poll command status.
-- `reservation(id)` fetches the final confirmed reservation.
+- `reservationRequestStatus(id)` lets a client poll command status.
+- `reservationResult(requestId)` fetches the final confirmed reservation produced by a completed request.
 - `movies`, `movie`, `screenings`, and `screening` support the UI flow.
 
 Normal customer GraphQL inputs should not include `movieProviderId`. The provider/tenant comes from the authenticated user context. This mirrors the SaaS pattern where tenant identity is established by auth/session state, not by request bodies that clients can tamper with.
@@ -263,8 +263,8 @@ type Query {
   movies: [Movie!]!
   screening(id: ID!): Screening
   screenings(movieId: ID): [Screening!]!
-  reservationRequestById(id: ID!): ReservationRequest
-  reservation(id: ID!): Reservation
+  reservationRequestStatus(id: ID!): ReservationRequest
+  reservationResult(requestId: ID!): Reservation
 }
 
 type Mutation {
@@ -430,7 +430,7 @@ Authorization research candidates:
 - Files/modules likely affected: `movie-reservation-service/src/presentation/graphql`, `movie-reservation-service/schema.gql`, `movie-reservation-service/test/e2e`, `movie-reservation-service/test/schema.test.ts`.
 - Notes: Commands and queries should pass `ActorContext` into application services.
 - Verification:
-  - GraphQL e2e covers `movies`, `screenings`, `requestReservation`, `reservationRequestById`, and `reservation`.
+  - GraphQL e2e covers `movies`, `screenings`, `requestReservation`, `reservationRequestStatus`, and `reservationResult`.
   - Schema test asserts old booking fields are gone and movie reservation fields exist.
   - `npm -w movie-reservation-service run check`
 
@@ -618,23 +618,23 @@ Rollback/removal guidance:
 
 ## 15. Risks and Mitigations
 
-| Risk | Impact | Likelihood | Mitigation |
-|---|---:|---:|---|
-| Scope grows too fast | High | High | Keep deliverables small and reviewable; do not combine phase 1 with Postgres or ECS. |
-| Workspace rename creates noisy diffs | Medium | High | Do rename as its own deliverable before domain edits. |
-| CI blocks work because the first workflow is too broad | Medium | Medium | Keep the first workflow to local-equivalent checks only; defer deploy, Docker publishing, security gates, and matrices. |
-| Auth becomes too real too early | Medium | Medium | Add contract and fake implementation first; defer OIDC/Cognito. |
-| Production runs with local auth wiring | High | Low | Block local auth modes in production config now; later exclude local/fake auth implementations from production images and add CI checks that production artifacts cannot resolve them. |
-| Authorization placeholder becomes permanent | High | Medium | Track explicit authorization research deliverable and ADR. |
-| Tenant scoping is missed in queries | High | Medium | Pass `ActorContext` into use cases and make repository methods tenant-aware. |
-| Shared DB model leaks cross-tenant data | High | Medium | Add tenant isolation tests and indexes; evaluate RLS later. |
-| CQRS becomes abstract ceremony | Medium | Medium | Keep it tied to reservation request status, processor contract, and seat conflicts. |
-| Async processing is hidden behind timers | Medium | Medium | Model processor contract explicitly and drive tests deterministically. |
-| Seat conflicts are mishandled under concurrency | High | Medium | Use Postgres uniqueness constraints and idempotent processor behavior once persistence exists. |
-| Infra costs surprise you | High | Medium | Start ECS with in-memory API only; defer RDS; set AWS Budgets before real deploys. |
-| Observability becomes bolted on late | Medium | High | Add local OTel, metrics, structured logs, Tempo, Loki, and Grafana before complex AWS worker paths. |
-| CDK abstraction hides learning | Medium | Medium | Create explicit resources first, then extract constructs later. |
-| Kubernetes and ECS drift | Medium | Medium | Preserve the same app contract across runtimes. |
+| Risk                                                   | Impact | Likelihood | Mitigation                                                                                                                                                                             |
+| ------------------------------------------------------ | -----: | ---------: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Scope grows too fast                                   |   High |       High | Keep deliverables small and reviewable; do not combine phase 1 with Postgres or ECS.                                                                                                   |
+| Workspace rename creates noisy diffs                   | Medium |       High | Do rename as its own deliverable before domain edits.                                                                                                                                  |
+| CI blocks work because the first workflow is too broad | Medium |     Medium | Keep the first workflow to local-equivalent checks only; defer deploy, Docker publishing, security gates, and matrices.                                                                |
+| Auth becomes too real too early                        | Medium |     Medium | Add contract and fake implementation first; defer OIDC/Cognito.                                                                                                                        |
+| Production runs with local auth wiring                 |   High |        Low | Block local auth modes in production config now; later exclude local/fake auth implementations from production images and add CI checks that production artifacts cannot resolve them. |
+| Authorization placeholder becomes permanent            |   High |     Medium | Track explicit authorization research deliverable and ADR.                                                                                                                             |
+| Tenant scoping is missed in queries                    |   High |     Medium | Pass `ActorContext` into use cases and make repository methods tenant-aware.                                                                                                           |
+| Shared DB model leaks cross-tenant data                |   High |     Medium | Add tenant isolation tests and indexes; evaluate RLS later.                                                                                                                            |
+| CQRS becomes abstract ceremony                         | Medium |     Medium | Keep it tied to reservation request status, processor contract, and seat conflicts.                                                                                                    |
+| Async processing is hidden behind timers               | Medium |     Medium | Model processor contract explicitly and drive tests deterministically.                                                                                                                 |
+| Seat conflicts are mishandled under concurrency        |   High |     Medium | Use Postgres uniqueness constraints and idempotent processor behavior once persistence exists.                                                                                         |
+| Infra costs surprise you                               |   High |     Medium | Start ECS with in-memory API only; defer RDS; set AWS Budgets before real deploys.                                                                                                     |
+| Observability becomes bolted on late                   | Medium |       High | Add local OTel, metrics, structured logs, Tempo, Loki, and Grafana before complex AWS worker paths.                                                                                    |
+| CDK abstraction hides learning                         | Medium |     Medium | Create explicit resources first, then extract constructs later.                                                                                                                        |
+| Kubernetes and ECS drift                               | Medium |     Medium | Preserve the same app contract across runtimes.                                                                                                                                        |
 
 ## 16. Done Criteria
 
