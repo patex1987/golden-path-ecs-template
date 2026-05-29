@@ -9,6 +9,7 @@ import { MovieReservationsService } from '../../application/movie-reservations/m
 import type { Clock } from '../../application/movie-reservations/ports/clock';
 import type { MovieReservationRepository } from '../../application/movie-reservations/ports/movie-reservation-repository';
 import type { ReservationIdGenerator } from '../../application/movie-reservations/ports/reservation-id-generator';
+import type { ReservationRequestIdGenerator } from '../../application/movie-reservations/ports/reservation-request-id-generator';
 import type { ReservationRequestProcessor } from '../../application/movie-reservations/ports/reservation-request-processor';
 import type { ReservationRequestWorkRepository } from '../../application/movie-reservations/ports/reservation-request-work-repository';
 import type { AuthMode } from '../../config';
@@ -16,6 +17,7 @@ import { JwtAuthenticationManager } from '../../infrastructure/authentication/jw
 import { LocalFixedUserAuthenticationManager } from '../../infrastructure/authentication/local-fixed-user-authentication.manager';
 import { LocalJwtTokenValidationClient } from '../../infrastructure/authentication/local-jwt-token-validation.client';
 import { RandomReservationIdGenerator } from '../../infrastructure/movie-reservations/random-reservation-id-generator';
+import { RandomReservationRequestIdGenerator } from '../../infrastructure/movie-reservations/random-reservation-request-id-generator';
 import { SystemClock } from '../../infrastructure/movie-reservations/system-clock';
 import { InMemoryMovieReservationRepository } from '../../infrastructure/repositories/in-memory/in-memory-movie-reservation.repository';
 import { InMemoryMovieReservationStore } from '../../infrastructure/repositories/in-memory/in-memory-movie-reservation.store';
@@ -26,6 +28,7 @@ import {
   IN_MEMORY_MOVIE_RESERVATION_STORE,
   MOVIE_RESERVATION_REPOSITORY,
   RESERVATION_ID_GENERATOR,
+  RESERVATION_REQUEST_ID_GENERATOR,
   RESERVATION_REQUEST_PROCESSOR,
   RESERVATION_REQUEST_WORK_REPOSITORY,
   TOKEN_VALIDATION_CLIENT,
@@ -56,6 +59,7 @@ export class MovieReservationsCompositionModule {
         MOVIE_RESERVATION_REPOSITORY,
         MovieReservationsService,
         RESERVATION_ID_GENERATOR,
+        RESERVATION_REQUEST_ID_GENERATOR,
         RESERVATION_REQUEST_PROCESSOR,
         RESERVATION_REQUEST_WORK_REPOSITORY,
       ],
@@ -100,6 +104,11 @@ function createProviders(
         new RandomReservationIdGenerator(),
     },
     {
+      provide: RESERVATION_REQUEST_ID_GENERATOR,
+      useFactory: (): ReservationRequestIdGenerator =>
+        new RandomReservationRequestIdGenerator(),
+    },
+    {
       provide: CLOCK,
       useFactory: (): Clock => new SystemClock(),
     },
@@ -126,9 +135,18 @@ function createProviders(
       useFactory: (
         repository: MovieReservationRepository,
         authorizationService: AuthorizationService,
+        reservationRequestIdGenerator: ReservationRequestIdGenerator,
       ): MovieReservationsService =>
-        new MovieReservationsService(repository, authorizationService),
-      inject: [MOVIE_RESERVATION_REPOSITORY, AuthorizationService],
+        new MovieReservationsService(
+          repository,
+          authorizationService,
+          reservationRequestIdGenerator,
+        ),
+      inject: [
+        MOVIE_RESERVATION_REPOSITORY,
+        AuthorizationService,
+        RESERVATION_REQUEST_ID_GENERATOR,
+      ],
     },
   ];
 }
