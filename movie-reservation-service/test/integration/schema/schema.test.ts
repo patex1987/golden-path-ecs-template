@@ -52,9 +52,7 @@ describe('generated GraphQL schema', () => {
     expect(schema).toContain(
       'Polls the status of a reservation request created by requestReservation.',
     );
-    expect(schema).toContain(
-      'Asynchronous command/status record created when a user asks to reserve seats.',
-    );
+    expect(schema).toContain('Intent-driven command to reserve seats.');
     expect(schema).toContain('type Movie');
     expect(schema).toContain('type Screening');
     expect(schema).toContain('type Seat');
