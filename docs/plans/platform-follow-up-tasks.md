@@ -17,6 +17,10 @@ Use `docs/plans/service-follow-up-tasks.md` for service/domain/API leftovers. Us
 - Revisit required-check management if the list of GitHub Actions jobs changes often. A future aggregate `ci-success` job may make branch protection easier to maintain.
 - Revisit Node version matrix testing only if the project commits to supporting multiple Node runtime versions.
 
+## Developer Tooling
+
+- Plan a migration from npm workspaces to pnpm workspaces as a learning exercise and to match likely company tooling. Cover `package.json` workspace configuration, lockfile replacement, `packageManager` pinning, Corepack setup, CI cache changes, README/workflow command updates, and a rollback path back to npm if the migration causes tool compatibility issues.
+
 ## Infrastructure Workflow
 
 - Revisit whether `ecs-infra` should split into multiple packages when shared constructs, environment stacks, deployment tooling, or multiple independently owned infra modules exist.

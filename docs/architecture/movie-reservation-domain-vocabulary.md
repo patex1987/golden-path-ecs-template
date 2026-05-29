@@ -78,12 +78,47 @@ supports an asynchronous workflow:
 ```text
 client asks to reserve seats
 service creates ReservationRequest in REQUESTED state
-client polls reservationRequestById(id)
+client polls reservationRequestStatus(id)
 processor later confirms, rejects, or fails the request
 ```
 
 The request owns workflow status such as `REQUESTED`, `PROCESSING`,
 `CONFIRMED`, `REJECTED`, and `FAILED`.
+
+Reservation request processing also has internal ordering metadata. In D5 this
+is a FIFO sequence. The sequence is deliberately hidden from GraphQL clients
+and is not part of the `ReservationRequest` domain model, but it is useful
+application-owner observability metadata for debugging processing order, stuck
+work, and processor failures. Later durable implementations may use different
+technology-specific ordering metadata, but they should preserve an
+operator-visible way to troubleshoot ordering and stuck work.
+
+In D5, the same service process owns both sides of the workflow. Later durable
+phases can split this into a control plane and data plane: the GraphQL API
+creates reservation requests and exposes status/result reads, while a separate
+worker runtime claims and processes pending requests against the same durable
+source of truth.
+
+Current D5 behavior is intentionally all-or-nothing: if any requested seat is
+already confirmed for the screening, the processor rejects the whole request.
+This is a short-term simplification for the in-process processor contract, not
+the desired long-term customer experience. A later product/design pass should
+decide whether to offer partial confirmation, alternative seats, or explicit
+user choice when only some requested seats are unavailable.
+
+`FAILED` is also a short-term D5 terminal state. It means the in-process
+processor hit an unexpected internal failure after claiming the request. D5
+does not retry failed requests, reclaim stuck `PROCESSING` requests, or expose a
+dead-letter workflow. Later durable worker/database phases should add retry
+policy, claim leases or timeouts, and operator-facing failure handling.
+
+The current GraphQL read contract also has a short-term simplification:
+`reservationRequestStatus(id)` and `reservationResult(requestId)` are nullable.
+That keeps the early API small, but it is not production-quality if `null`
+means many different things. A later GraphQL contract should use explicit
+typed results or deliberate GraphQL errors so clients can distinguish pending,
+rejected, failed, not-found, unauthorized/hidden, and successful cases without
+guessing.
 
 ### Reservation
 
@@ -130,3 +165,7 @@ Reservation
 - Use `Screening` for a scheduled showing.
 - Use `ReservationRequest` for the command/status object.
 - Use `Reservation` for the confirmed result.
+- Use GraphQL `reservationRequestStatus(id)` when fetching the command/status
+  object.
+- Use GraphQL `reservationResult(requestId)` when fetching the final booking
+  result produced by a confirmed request.

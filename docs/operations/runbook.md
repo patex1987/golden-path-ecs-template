@@ -61,11 +61,12 @@ Example polling query:
 
 ```graphql
 query ReservationRequest($id: ID!) {
-  reservationRequestById(id: $id) {
+  reservationRequestStatus(id: $id) {
     id
+    screeningId
+    seatIds
+    requestedByUserId
     status
-    reservationId
-    failureReason
   }
 }
 ```

@@ -49,6 +49,7 @@ Current documents:
 
 - [my-learning-notes.md](learning/my-learning-notes.md) - chronological personal learning notes.
 - [graphql-context-factory-notes.md](learning/graphql-context-factory-notes.md) - notes on Apollo GraphQL context creation and request enrichment.
+- [node-package-tooling-cards.md](learning/node-package-tooling-cards.md) - Trello-card-style notes for nvm, npm, Corepack, pnpm, and Yarn.
 - [ts-cdk-learning-path.md](learning/ts-cdk-learning-path.md) - TypeScript and CDK study path.
 - [typescript-docstrings-and-generated-docs.md](learning/typescript-docstrings-and-generated-docs.md) - notes on TypeScript documentation comments and generated docs.
 - [vitest-cheat-sheet.md](learning/vitest-cheat-sheet.md) - Vitest notes from a pytest mental model.
@@ -74,6 +75,7 @@ Current documents:
 - [ai-review-workflow.md](workflows/ai-review-workflow.md) - how the repository's AI review agents are organized and used.
 - [ci-workflow.md](workflows/ci-workflow.md) - local and GitHub Actions CI commands, jobs, required checks, and test categories.
 - [curated-technology-resources.md](workflows/curated-technology-resources.md) - expanded trusted technology references for AI and human contributors.
+- [graphql-reservation-query-examples.md](workflows/graphql-reservation-query-examples.md) - local GraphiQL, curl, and Postman examples for the movie reservation story.
 - [git-workflow.md](workflows/git-workflow.md) - branch naming, commit messages, squash merges, and issue-linked workflow.
 
 ## `scratch/`

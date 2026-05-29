@@ -6,7 +6,7 @@ Add the first movie reservation GraphQL polling API on top of the existing movie
 
 ## 2. Goals
 
-- Expose `movies`, `screenings`, `requestReservation`, `reservationRequestById`, and `reservation`.
+- Expose `movies`, `screenings`, `requestReservation`, `reservationRequestStatus`, and `reservationResult`.
 - Keep `movieProviderId` out of normal GraphQL inputs and derive tenant scope from `ActorContext`.
 - Keep GraphQL classes, decorators, and input models in the presentation layer.
 - Add e2e and schema coverage before implementation.
@@ -30,7 +30,7 @@ Add the first movie reservation GraphQL polling API on top of the existing movie
 
 ### Confirmed Requirements
 
-- GraphQL e2e covers `movies`, `screenings`, `requestReservation`, `reservationRequestById`, and `reservation`.
+- GraphQL e2e covers `movies`, `screenings`, `requestReservation`, `reservationRequestStatus`, and `reservationResult`.
 - Schema test proves old booking fields are gone and movie reservation fields exist.
 - Commands and queries pass `ActorContext` into application services.
 
@@ -38,7 +38,7 @@ Add the first movie reservation GraphQL polling API on top of the existing movie
 
 - `requestReservation` should create a `REQUESTED` request and return immediately; D5 will process it.
 - `screenings(movieId)` may filter provider-scoped screenings by movie id.
-- `reservationRequestById(id)` follows the same provider/owner/admin placeholder authorization style as reservations.
+- `reservationRequestStatus(id)` follows the same provider/owner/admin placeholder authorization style as reservations.
 
 ### Open Questions
 
@@ -70,8 +70,8 @@ GraphQL adds:
 
 - `movies: [Movie!]!`
 - `screenings(movieId: ID): [Screening!]!`
-- `reservationRequestById(id: ID!): ReservationRequest`
-- `reservation(id: ID!): Reservation`
+- `reservationRequestStatus(id: ID!): ReservationRequest`
+- `reservationResult(requestId: ID!): Reservation`
 - `requestReservation(input: RequestReservationInput!): ReservationRequest!`
 
 ## 9. Data Model / Persistence Changes
@@ -116,11 +116,11 @@ No data migration. This is a breaking API replacement already planned by the roa
 
 ## 15. Risks and Mitigations
 
-| Risk | Impact | Likelihood | Mitigation |
-|---|---:|---:|---|
-| Resolver grows business logic | Medium | Medium | Keep authorization and tenant scoping in application service |
-| Input accidentally accepts tenant id | High | Low | Schema test for `RequestReservationInput` fields |
-| Request creation gets confused with confirmation | Medium | Medium | Return `REQUESTED`; leave processing for D5 |
+| Risk                                             | Impact | Likelihood | Mitigation                                                   |
+| ------------------------------------------------ | -----: | ---------: | ------------------------------------------------------------ |
+| Resolver grows business logic                    | Medium |     Medium | Keep authorization and tenant scoping in application service |
+| Input accidentally accepts tenant id             |   High |        Low | Schema test for `RequestReservationInput` fields             |
+| Request creation gets confused with confirmation | Medium |     Medium | Return `REQUESTED`; leave processing for D5                  |
 
 ## 16. Done Criteria
 
