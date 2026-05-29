@@ -132,9 +132,7 @@ type Reservation {
   seatIds: [ID!]!
 }
 
-"""
-Asynchronous command/status record created when a user asks to reserve seats.
-"""
+"""Intent-driven command to reserve seats."""
 type ReservationRequest {
   """
   Reservation request id returned by requestReservation. Use this id with reservationRequestStatus to poll status and reservationResult to fetch the confirmed result.
