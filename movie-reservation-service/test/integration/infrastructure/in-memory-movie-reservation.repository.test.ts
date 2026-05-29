@@ -195,7 +195,8 @@ describe('InMemoryReservationRequestWorkRepository', () => {
     });
     const repository = new InMemoryMovieReservationRepository(store);
     const workRepository = new InMemoryReservationRequestWorkRepository(store);
-    const claimedWorkItem = await workRepository.claimNextPendingReservationRequest();
+    const claimedWorkItem =
+      await workRepository.claimNextPendingReservationRequest();
 
     if (claimedWorkItem === null) {
       throw new Error('Expected pending request to be claimed');
@@ -228,7 +229,9 @@ describe('InMemoryReservationRequestWorkRepository', () => {
       status: ReservationRequestStatus.CONFIRMED,
     });
     await expect(
-      repository.findReservationById(createReservationId('reservation-confirmed')),
+      repository.findReservationById(
+        createReservationId('reservation-confirmed'),
+      ),
     ).resolves.toMatchObject({
       reservationRequestId: 'request-confirmed',
       seatIds: ['seat-a1'],
