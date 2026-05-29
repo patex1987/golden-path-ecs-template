@@ -26,6 +26,19 @@ Expected basic responses:
 Use `/health` to check that the process is alive.
 Use `/ready` to check that the service can receive real traffic.
 
+The service should keep three operational health concepts separate:
+
+| Layer                         | Question it answers                                                                   | Typical use                                                                                                                                                                                                                |
+| ----------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Liveness: `/health`           | Is the process alive?                                                                 | Container/runtime liveness checks. A failure usually means the process is broken and can be restarted.                                                                                                                     |
+| Platform readiness: `/ready`  | Can this process accept traffic from the platform?                                    | Load balancer, ECS, Docker Compose, or future Kubernetes readiness. This should be conservative about dependency failures so one dependency outage does not automatically cause all API tasks/pods to flap out of service. |
+| Business/dependency readiness | Can this service currently perform its business job, including required dependencies? | Dependency probing, diagnostics, alerts, dashboards, and future observability history. For Postgres mode, this is where a database connectivity/check query belongs.                                                       |
+
+Do not blindly point platform probes at every dependency check. A database
+outage means the service is degraded or unable to fulfill some business
+operations; it does not necessarily mean the API process should be restarted or
+removed from every load balancer target.
+
 ---
 
 ## GraphQL Smoke Test

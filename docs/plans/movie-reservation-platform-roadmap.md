@@ -335,7 +335,9 @@ Concurrency constraints to add in the Postgres phase:
 
 - Prevent two confirmed reservations from claiming the same seat for the same screening.
 - Track request state transitions durably.
+- Add a Postgres-owned internal `reservation_requests.sequence` for FIFO worker claiming.
 - Add indexes for `movie_provider_id`, request status, owner `user_id`, and worker claim fields.
+- Defer a dedicated work queue table until retries, leases, delayed work, dead-letter behavior, or multiple worker types require it.
 
 Migration strategy:
 
@@ -385,6 +387,8 @@ Authorization research candidates:
 - The database should be the source of truth for request state once persistence exists.
 - Queue systems should signal/wake workers, not own reservation truth.
 - Processor work should be idempotent.
+- D6 should use transactions and row locks for request claiming instead of generic optimistic-locking version columns. Revisit optimistic locking later for mutable catalog/admin workflows or explicit compare-and-swap state transitions.
+- Keep liveness, platform readiness, and business/dependency readiness separate. Postgres dependency health should be observable, but it should not automatically make platform probes remove every API task/pod from service during a dependency outage.
 - Worker claims should have leases/timeouts once durable processing exists.
 - Failed worker messages should eventually go to a dead-letter queue when SQS/Rabbit is added.
 - ECS API and worker services should scale independently after the worker exists.
@@ -460,11 +464,33 @@ Authorization research candidates:
 
 - Change: Add local Postgres, Knex config, migrations, and Postgres repository adapter.
 - Files/modules likely affected: root compose files, `movie-reservation-service/package.json`, service config, migrations, repository adapter, docs/operations.
-- Notes: Keep in-memory tests and add focused integration tests against local Postgres.
+- Notes: Keep in-memory tests and add focused Testcontainers e2e tests against Postgres. Keep an external/manual database e2e mode for Docker Compose or developer-managed Postgres.
 - Verification:
   - Migrations run locally.
-  - Integration tests pass against local Postgres.
+  - E2E tests pass against Testcontainers Postgres.
   - Constraints prevent double-confirming the same screening seat.
+
+### Deliverable DI-1: Refine Service DI Composition Profiles
+
+- Change: Refactor the NestJS composition wiring after D6 so auth and persistence choices are selected through explicit typed composition profiles instead of growing one large conditional module.
+- Files/modules likely affected: `movie-reservation-service/src/config.ts`, `movie-reservation-service/src/app.module.ts`, `movie-reservation-service/src/di/movie-reservations`, service env files/templates, composition/config tests, `docs/plans/service-di-composition-breakdown.md`.
+- Notes: Preserve D6 behavior. This is a behavior-preserving cleanup that normalizes the minimal `PERSISTENCE_MODE` wiring introduced by Postgres. Do not add new Postgres behavior, OIDC, workers, or observability here.
+- Verification:
+  - Config tests cover valid and invalid profile combinations.
+  - Composition tests prove in-memory and Postgres repository modes still resolve.
+  - Existing GraphQL and health behavior remains unchanged.
+  - `npm -w movie-reservation-service run check`
+
+### Deliverable Docker-1: Containerize the NestJS API for Local Compose
+
+- Change: Add a local Docker image/runtime path for the NestJS API after the DI profile contract is explicit.
+- Files/modules likely affected: service Dockerfile or Docker build config, root compose files, service env files/templates, local run docs, docs/operations.
+- Notes: The containerized API should use the same checked-in env/profile model as host-based npm development and should run against Dockerized Postgres. Keep observability out until Deliverable 7.
+- Verification:
+  - Docker Compose can start Postgres and the API together.
+  - API container returns `/health` and `/ready`.
+  - API container can run a GraphQL smoke query against Postgres-backed persistence.
+  - Local docs include the host-npm and Compose-container run paths.
 
 ### Deliverable 7: Add Local Observability
 
@@ -598,6 +624,8 @@ This is a learning repo, so rollout means keeping each phase reversible, reviewa
 - Keep in-memory state before Postgres.
 - Keep the processor contract before durable workers.
 - Add Postgres behind repository interfaces.
+- Refine service DI composition profiles after Postgres so auth and persistence mode selection stays explicit and testable.
+- Containerize the local NestJS API after the DI profile contract exists.
 - Keep migrations explicit, not automatic app startup side effects.
 - Deploy a cheap ECS API-only service before adding RDS.
 - Add RDS only after ECS/ALB basics are understood.
