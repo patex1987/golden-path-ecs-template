@@ -38,19 +38,18 @@ http://localhost:3000/graphql
 - `reservationResult(requestId)` fetches the final booking result by the same
   request id after the request is confirmed.
 
-D5 intentionally does not add a timer, queue, background worker process, or
-public GraphQL mutation to process work. `requestReservation(input)` creates a
-`REQUESTED` request and returns immediately. The in-process processor exists as
-an internal application contract, and tests call `processNextPendingRequest()`
-directly. If you only use GraphiQL, curl, or Postman against the running local
-service, a newly created request will remain `REQUESTED` until some internal
-code invokes the processor.
+D6.1 adds a local fake in-process worker. `requestReservation(input)` still
+creates a `REQUESTED` request and returns immediately, but the local worker can
+claim it, briefly mark it `PROCESSING`, and then move it to `CONFIRMED` or
+`REJECTED`. This is not a production worker runtime; it is a deterministic
+local data-plane adapter that teaches the future control-plane/worker split
+without adding a queue or a separate service yet.
 
 One current API caveat: `screenings { seats }` returns the seats for the
 screening's auditorium. It is not yet a dedicated availability query that
-subtracts confirmed reservations. In the seed data, seats `seat-aurora-1-a1`
-and `seat-aurora-1-a2` are already confirmed for
-`reservation-aurora-ada`; use `seat-aurora-1-a3` for the happy-path local
+subtracts confirmed reservations. In the seed data, seats `66666666-6666-4666-8666-666666666661`
+and `66666666-6666-4666-8666-666666666662` are already confirmed for
+`88888888-8888-4888-8888-888888888881`; use `66666666-6666-4666-8666-666666666663` for the happy-path local
 example.
 
 ## 1. List Movies
@@ -69,14 +68,14 @@ query Movies {
 Useful local seed value:
 
 ```text
-movie-aurora-1
+44444444-4444-4444-8444-444444444441
 ```
 
 ## 2. List Screenings And Seats
 
 ```graphql
 query ScreeningsForMovie {
-  screenings(movieId: "movie-aurora-1") {
+  screenings(movieId: "44444444-4444-4444-8444-444444444441") {
     id
     movieId
     auditoriumId
@@ -94,8 +93,8 @@ query ScreeningsForMovie {
 Useful local seed values:
 
 ```text
-screening-aurora-1
-seat-aurora-1-a3
+55555555-5555-4555-8555-555555555551
+66666666-6666-4666-8666-666666666663
 ```
 
 ## 3. Request A Reservation
@@ -103,7 +102,10 @@ seat-aurora-1-a3
 ```graphql
 mutation RequestReservation {
   requestReservation(
-    input: { screeningId: "screening-aurora-1", seatIds: ["seat-aurora-1-a3"] }
+    input: {
+      screeningId: "55555555-5555-4555-8555-555555555551"
+      seatIds: ["66666666-6666-4666-8666-666666666663"]
+    }
   ) {
     id
     screeningId
@@ -120,17 +122,20 @@ Expected status immediately after the mutation:
 REQUESTED
 ```
 
+The local fake worker may process the request before you poll, so seeing
+`CONFIRMED` quickly is also expected.
+
 Copy the returned reservation request id, for example:
 
 ```text
-request-846292b1-7e14-4445-a79c-35b894c57f8b
+9f9f9f9f-9f9f-4f9f-8f9f-9f9f9f9f9f9f
 ```
 
 ## 4. Poll The Reservation Request
 
 ```graphql
 query ReservationRequestStatus {
-  reservationRequestStatus(id: "request-846292b1-7e14-4445-a79c-35b894c57f8b") {
+  reservationRequestStatus(id: "9f9f9f9f-9f9f-4f9f-8f9f-9f9f9f9f9f9f") {
     id
     requestedByUserId
     screeningId
@@ -147,7 +152,9 @@ Possible statuses:
 - `CONFIRMED`: processing succeeded and a confirmed reservation was created.
 - `REJECTED`: processing completed, but the requested seats conflicted with an
   existing confirmed reservation.
-- `FAILED`: processing hit an unexpected internal failure. In D5 this is terminal and is not retried automatically; later durable worker phases should add retry policy and operator-facing failure handling.
+- `FAILED`: processing hit repeated unexpected internal failures after the
+  small local retry budget was used. Seat conflicts are terminal `REJECTED` and
+  are not retried.
 
 ## 5. Fetch The Reservation Result
 
@@ -157,7 +164,7 @@ confirmed request:
 
 ```graphql
 query ReservationResult {
-  reservationResult(requestId: "request-aurora-ada") {
+  reservationResult(requestId: "77777777-7777-4777-8777-777777777771") {
     id
     reservationRequestId
     screeningId
@@ -190,8 +197,8 @@ curl -s http://localhost:3000/graphql \
     "query": "mutation RequestReservation($input: RequestReservationInput!) { requestReservation(input: $input) { id status screeningId seatIds } }",
     "variables": {
       "input": {
-        "screeningId": "screening-aurora-1",
-        "seatIds": ["seat-aurora-1-a3"]
+        "screeningId": "55555555-5555-4555-8555-555555555551",
+        "seatIds": ["66666666-6666-4666-8666-666666666663"]
       }
     }
   }'
@@ -217,7 +224,7 @@ Body type: raw JSON
 {
   "query": "query ReservationRequestStatus($id: ID!) { reservationRequestStatus(id: $id) { id screeningId seatIds requestedByUserId status } }",
   "variables": {
-    "id": "request-846292b1-7e14-4445-a79c-35b894c57f8b"
+    "id": "9f9f9f9f-9f9f-4f9f-8f9f-9f9f9f9f9f9f"
   }
 }
 ```

@@ -17,6 +17,7 @@ Current documents:
 
 - [architecture.md](architecture/architecture.md) - current system architecture and target direction.
 - [architecture-decisions.md](architecture/architecture-decisions.md) - ADR-style decision log and tradeoffs.
+- [database-schema.md](architecture/database-schema.md) - current Postgres table relationships and reservation workflow constraints.
 - [graphql-request-flow.md](architecture/graphql-request-flow.md) - GraphQL request path through NestJS, Apollo, middleware, context, resolvers, and clean architecture layers.
 - [golden-path.md](architecture/golden-path.md) - the opinionated service path this template should provide.
 - [movie-reservation-domain-vocabulary.md](architecture/movie-reservation-domain-vocabulary.md) - shared domain vocabulary for movie providers, auditoriums, screenings, seats, reservation requests, and reservations.

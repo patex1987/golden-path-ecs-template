@@ -52,8 +52,13 @@ query ListScreenings($movieId: ID) {
   screenings(movieId: $movieId) {
     id
     movieId
+    auditoriumId
     startsAt
-    auditoriumName
+    seats {
+      id
+      row
+      number
+    }
   }
 }
 ```
@@ -90,18 +95,138 @@ GraphQL is for business operations. Do not use GraphQL as the load balancer heal
 
 ## Local Docker Compose Checks
 
-Target checks:
+Docker Compose currently starts Postgres only. The NestJS API still runs on the
+host through npm scripts.
 
-- service container is running
-- Postgres container is running once persistence exists
-- Knex migrations can run against local Postgres
+Database scripts are split into two layers:
+
+- `db:migrate`, `db:migrate:status`, and `db:seed:local` are environment
+  agnostic. They expect `DATABASE_URL` and pool settings to come from the
+  process environment, which is the same contract future ECS tasks or
+  Kubernetes Jobs should use.
+- `*:local-postgres` scripts are local developer conveniences. They load
+  `movie-reservation-service/env_files/local-postgres.env` before running the
+  same TypeScript migration and seed entrypoints.
+
+Start local Postgres:
+
+```sh
+docker compose up -d postgres
+```
+
+Compose binds Postgres to `127.0.0.1:5432` so local tools can connect through
+`localhost` without exposing the predictable development credentials on every
+network interface.
+
+Run schema migrations explicitly:
+
+```sh
+npm -w movie-reservation-service run db:migrate:local-postgres
+```
+
+Seed local/demo catalog data separately from migrations:
+
+```sh
+npm -w movie-reservation-service run db:seed:local-postgres
+```
+
+Run the API against Postgres:
+
+```sh
+npm -w movie-reservation-service run dev:local-postgres
+```
+
+The local Postgres profile enables the fake in-process reservation worker. It
+is useful for local polling workflows, but it is not a production worker
+runtime or the final control-plane/data-plane deployment shape.
+
+Worker retries are split by failure type:
+
+- lease timeouts are abandoned claims, usually caused by process crashes,
+  deploy/scale-in interruption, OOM kills, missed heartbeats, blocked event
+  loop work, or a hung database/external call;
+- transient failures are handled processor errors. D6.1 keeps the classifier
+  coarse by treating `unexpected-error` as retryable, then failing the request
+  after the configured transient failure budget is exhausted.
+
+Seat conflicts and invalid request data are business outcomes, not transient
+failures, and should not be retried.
+
+Check migration status:
+
+```sh
+npm -w movie-reservation-service run db:migrate:status:local-postgres
+```
+
+Open a `psql` shell inside the Postgres container:
+
+```sh
+docker compose exec postgres psql -U movie_reservation_service -d movie_reservation_service
+```
+
+The local Compose credentials are intentionally non-secret:
+
+```text
+user:     movie_reservation_service
+password: movie_reservation_service
+database: movie_reservation_service
+```
+
+Reset the local database volume when you want a clean database:
+
+```sh
+docker compose down -v
+```
+
+Migrations are not run by normal API startup. That keeps local behavior aligned
+with the future ECS/Kubernetes model where a one-off task or job runs the same
+compiled migration runner before API tasks receive traffic.
+
+When an environment injects `DATABASE_URL` directly, use the generic commands:
+
+```sh
+npm -w movie-reservation-service run db:migrate
+npm -w movie-reservation-service run db:migrate:status
+```
+
+For a Bash shell, you can also load the local Compose env file into the current
+session and then run those same generic commands:
+
+```sh
+set -a
+source movie-reservation-service/env_files/local-postgres.env
+set +a
+
+npm -w movie-reservation-service run db:migrate
+npm -w movie-reservation-service run db:migrate:status
+```
+
+`set -a` makes variables read from the env file exported, so child processes
+started by `npm` can see `DATABASE_URL`, `PERSISTENCE_MODE`, and the pool
+settings. This affects only the current shell session.
+
+Postgres e2e tests use Testcontainers by default:
+
+```sh
+npm -w movie-reservation-service run test:e2e
+```
+
+To run the same e2e tests against a developer-managed database, use
+`TEST_DATABASE_URL`. This mode is destructive to that database because the test
+harness resets the `public` schema:
+
+```sh
+TEST_DATABASE_URL=postgres://movie_reservation_service:movie_reservation_service@localhost:5432/movie_reservation_service \
+  npm -w movie-reservation-service run test:e2e:external
+```
+
+Future local checks:
+
+- service container is running after the API is containerized
 - OpenTelemetry Collector is running
 - observability backend is receiving traces
-- `/health` returns success
 - a GraphQL operation produces a trace
 - logs include trace correlation fields after OpenTelemetry is added
-
-Document the exact commands once `docker-compose.yml` exists.
 
 ---
 

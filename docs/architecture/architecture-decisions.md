@@ -234,3 +234,81 @@ At this stage, adding both `tenantId` and `movieProviderId` would imply two sepa
 ### Tradeoff
 
 `movieProviderId` is less generic than `tenantId`, but it is clearer for the current domain. Introduce a separate generic tenant id only if platform tenancy and movie-provider ownership diverge, for example if one tenant owns multiple providers, billing/audit tenancy differs from provider ownership, or shared platform middleware needs a domain-neutral tenant contract.
+
+---
+
+## ADR 012: Use Explicit Knex Migrations For Service-Owned Postgres Schema
+
+Status: accepted.
+
+### Decision
+
+Use Knex and `pg` for the movie reservation service's Postgres persistence.
+Keep migrations explicit and schema-only: the API process must not run
+migrations during normal startup. Local/demo catalog data is seeded through a
+separate command.
+
+### Reason
+
+This keeps local development aligned with future ECS one-off tasks and
+Kubernetes Jobs: one migration entrypoint advances the schema before API tasks
+serve traffic. It also keeps database-specific code in infrastructure adapters
+while domain and application code stay plain TypeScript.
+
+### Tradeoff
+
+Developers must run migrations and seeds explicitly when using Postgres mode.
+That is a little less convenient than app-start migrations, but it avoids
+replica races and avoids teaching the normal API runtime to own schema-change
+permissions.
+
+---
+
+## ADR 013: Split Reservation Worker Retry Budgets By Failure Type
+
+Status: accepted.
+
+### Decision
+
+Track two reservation worker retry budgets:
+
+- `lease_timeout_count`, bounded by `RESERVATION_WORKER_MAX_LEASE_TIMEOUTS`
+- `transient_failure_count`, bounded by
+  `RESERVATION_WORKER_MAX_TRANSIENT_FAILURES`
+
+Lease timeouts and transient processor failures are both retryable, but they
+mean different things and should not share one counter.
+
+### Reason
+
+A lease timeout means a worker claimed a reservation request and stopped proving
+ownership before writing a terminal result. That can happen when:
+
+- an ECS task is killed during deploy or scale-in
+- the Node process crashes
+- the container is OOM-killed
+- the event loop is blocked long enough to miss heartbeats
+- CPU throttling or overload delays heartbeat timers
+- Postgres restarts or failover breaks the active connection or transaction
+- a future database or external dependency call hangs past the lease
+
+A transient processor failure means the worker is alive, caught a retryable
+processing failure, recorded it, and released the request for another attempt.
+D6.1 uses `unexpected-error` as a temporary coarse retryable bucket because no
+specific transient dependency failures exist yet. Later phases should classify
+specific retryable failures such as deadlocks, serialization failures,
+connection resets, dependency rate limits, and temporary 503 responses.
+
+Business outcomes are not transient failures. Seat conflicts, invalid seat
+selection, missing screenings, cross-provider access, authorization failures,
+and future definitive payment or provider rejections should not consume the
+transient failure retry budget.
+
+### Tradeoff
+
+Two counters are more schema and application code than one `attempt_count`.
+That extra explicitness is intentional: it keeps worker ownership recovery
+separate from processor exception retry policy. The current `unexpected-error`
+classification is still intentionally coarse and should be narrowed before real
+external dependencies such as payment, provider inventory, or notifications are
+added.
