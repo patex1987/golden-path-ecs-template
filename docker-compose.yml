@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: golden-path-movie-reservations-postgres
+    environment:
+      POSTGRES_DB: movie_reservation_service
+      POSTGRES_USER: movie_reservation_service
+      POSTGRES_PASSWORD: movie_reservation_service
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - movie_reservation_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U movie_reservation_service -d movie_reservation_service
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  movie_reservation_postgres_data:
