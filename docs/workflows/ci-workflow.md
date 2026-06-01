@@ -19,6 +19,11 @@ npm -w movie-reservation-service run ci
 npm -w ecs-infra run ci
 ```
 
+The local service `ci` script includes `test:e2e`, so it requires Docker for
+the Testcontainers Postgres database. The GitHub Actions workflow currently
+spells out its jobs manually and intentionally skips the Docker/Postgres e2e
+step until that CI runtime strategy is designed.
+
 The service workspace also exposes category-specific test commands:
 
 ```sh
@@ -41,7 +46,10 @@ GitHub Actions reads the same file through `actions/setup-node`, so local develo
 
 - Unit tests live under `movie-reservation-service/test/unit/**`.
 - Thin integration tests live under `movie-reservation-service/test/integration/**`.
-- Future Docker/Testcontainers e2e tests should use a separate `test/e2e/**` category and CI job.
+- Postgres e2e tests live under `movie-reservation-service/test/e2e/**`, but
+  they are local/manual checks for now. They require Docker/Testcontainers or a
+  developer-managed Postgres database and are intentionally not part of the
+  required CI-1 workflow yet.
 - Future deployed-environment smoke tests should use a separate system or smoke-test workflow.
 
 Current in-process NestJS Supertest checks are integration/API contract tests because they start the app in-process with local/fake infrastructure. They are not Docker-network e2e tests.
@@ -73,5 +81,13 @@ GitHub may require the workflow to run once before these status checks are avail
 ## Deferred Work
 
 CI-1 does not include deployment, Docker image publishing, dependency audit gates, action SHA pinning, custom caches, artifact uploads, test reports, special PR annotations, Node matrices, Docker/Testcontainers e2e checks, or deployed smoke tests.
+
+Postgres e2e tests should be added later as a separate CI job after the Docker
+runtime strategy is chosen. On GitHub-hosted Ubuntu runners, Testcontainers can
+usually talk to the runner VM's Docker daemon directly. In GitLab-style Docker
+executor jobs, the equivalent setup often needs Docker-in-Docker or an exposed
+Docker socket because the test process is already running inside a container.
+An alternative is to run Postgres as a CI service/Compose dependency and execute
+the e2e suite in external database mode.
 
 The detailed design is in [github-actions-ci-foundation.md](../plans/github-actions-ci-foundation.md). Deferred hardening and delivery work is tracked in [platform-follow-up-tasks.md](../plans/platform-follow-up-tasks.md).
