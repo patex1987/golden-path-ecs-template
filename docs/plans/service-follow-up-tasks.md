@@ -39,6 +39,14 @@ This file tracks intentional leftovers from the current movie reservation servic
   literals in tests over time. Prefer semantic constants or small local
   factories for common movie reservation fixtures, while keeping raw UUID
   examples in tests that specifically prove UUID parsing/validation behavior.
+- Review the current processor/repository tests that inline UUID literals such
+  as `99999999-9999-4999-8999-999999999911` for request, seat, and reservation
+  ids. The UUID shape protects the Postgres-compatible id contract, but the raw
+  literals make the test stories harder to scan. Evaluate better options such
+  as semantic fixture constants, deterministic UUID factories, per-test id
+  builders, or small domain-specific test fixture objects. The goal is to keep
+  valid UUIDs where they matter without hiding the business meaning of
+  `firstRequest`, `secondRequest`, and their selected seats.
 
 ## Local Development Runtime
 
