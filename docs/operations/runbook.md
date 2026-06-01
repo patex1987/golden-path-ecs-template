@@ -105,8 +105,8 @@ Database scripts are split into two layers:
   process environment, which is the same contract future ECS tasks or
   Kubernetes Jobs should use.
 - `*:local-postgres` scripts are local developer conveniences. They load
-  `movie-reservation-service/env_files/local-postgres.env` before running the
-  same TypeScript migration and seed entrypoints.
+  `movie-reservation-service/env_files/local/local-postgres.env` before
+  running the same TypeScript migration and seed entrypoints.
 
 Start local Postgres:
 
@@ -194,7 +194,7 @@ session and then run those same generic commands:
 
 ```sh
 set -a
-source movie-reservation-service/env_files/local-postgres.env
+source movie-reservation-service/env_files/local/local-postgres.env
 set +a
 
 npm -w movie-reservation-service run db:migrate

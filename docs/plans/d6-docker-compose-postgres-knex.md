@@ -106,7 +106,7 @@ PERSISTENCE_MODE=in-memory | postgres
 Default remains `in-memory`. Add a dedicated local Postgres env file, for example:
 
 ```text
-movie-reservation-service/env_files/local-postgres.env
+movie-reservation-service/env_files/local/local-postgres.env
 ```
 
 That file should set:

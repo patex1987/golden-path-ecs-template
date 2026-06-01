@@ -197,7 +197,7 @@ Internal configuration/interface changes:
 
 Environment template changes:
 
-- Update `movie-reservation-service/env_files/templates/*.env.template` to include the selected composition profile once names are finalized.
+- Update `movie-reservation-service/env_files/templates/**/*.env.template` to include the selected composition profile once names are finalized.
 - Keep `AUTH_MODE` temporarily if it still provides clear learning value, or derive auth mode from profile if that removes duplication.
 
 ## 9. Data Model / Persistence Changes

@@ -14,8 +14,9 @@ cdk.out/
 *.private.env
 *.override.env
 **/env_files/*.env
+**/env_files/**/*.env
 !**/env_files/templates/
-!**/env_files/templates/*.env.template
+!**/env_files/templates/**
 .DS_Store
 npm-debug.log*
 /schema.gql

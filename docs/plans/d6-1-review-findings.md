@@ -575,10 +575,10 @@ Known tradeoffs:
      templates.
    - Files/modules likely affected:
      - `src/config.ts`
-     - `env_files/local-fixed-user.env`
-     - `env_files/local-jwt.env`
-     - `env_files/local-postgres.env`
-     - `env_files/templates/*.env.template`
+     - `env_files/local/local-fixed-user.env`
+     - `env_files/local/local-jwt.env`
+     - `env_files/local/local-postgres.env`
+     - `env_files/templates/**/*.env.template`
      - `test/unit/config/env-profiles.test.ts`
    - Notes: do not perform the full DI composition refactor.
    - Verification: config unit tests and typecheck.
