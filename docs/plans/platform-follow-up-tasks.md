@@ -12,6 +12,11 @@ Use `docs/plans/service-follow-up-tasks.md` for service/domain/API leftovers. Us
 - Design CI reports and artifact handling. Decide whether to upload test reports, coverage reports, CDK synthesized templates, build outputs, screenshots, Docker logs, and smoke-test reports; define retention and sanitization rules.
 - Add CI observability as a platform concern. Track pipeline health, failure rates by job, flaky tests, queue time, runtime trends, cache hit rates, deployment gate failures, rollback signals, and whether CI/CD emits useful telemetry.
 - Design Docker/Testcontainers e2e and smoke-test waves. Decide how service images move between jobs: rebuild in the e2e job, upload/download image artifacts, or push/pull from a registry such as GitHub Container Registry.
+- Add a separate Postgres e2e CI job after the Docker runtime strategy is
+  chosen. Compare Testcontainers against the runner Docker daemon, a
+  CI-managed Postgres service, and Docker-in-Docker style setups for CI systems
+  where the job itself runs inside a container. Keep this out of required CI
+  until the job is stable enough not to make normal PR checks flaky.
 - Design deployed system/smoke tests for dev, staging, and production-like environments. These may become deployment quality gates, rollback monitors, or operational smoke checks.
 - Revisit path filters, docs-only shortcuts, and fast non-production override pipelines once CI runtime affects developer experience. Consider playground/dev-stage workflows that trade broad validation for quick iteration outside production.
 - Revisit required-check management if the list of GitHub Actions jobs changes often. A future aggregate `ci-success` job may make branch protection easier to maintain.

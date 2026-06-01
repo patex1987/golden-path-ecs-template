@@ -88,6 +88,9 @@ jobs:
       - name: Run service integration tests
         run: npm -w movie-reservation-service run test:integration
 
+  # TODO: Add a separate service-postgres-e2e job after the CI Docker strategy is
+    # decided. Keep Testcontainers/Postgres e2e out of required CI for now; see
+    # docs/plans/platform-follow-up-tasks.md.
   service-build:
     name: service-build
     runs-on: ubuntu-latest

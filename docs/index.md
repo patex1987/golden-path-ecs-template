@@ -17,6 +17,7 @@ Current documents:
 
 - [architecture.md](architecture/architecture.md) - current system architecture and target direction.
 - [architecture-decisions.md](architecture/architecture-decisions.md) - ADR-style decision log and tradeoffs.
+- [database-schema.md](architecture/database-schema.md) - current Postgres table relationships and reservation workflow constraints.
 - [graphql-request-flow.md](architecture/graphql-request-flow.md) - GraphQL request path through NestJS, Apollo, middleware, context, resolvers, and clean architecture layers.
 - [golden-path.md](architecture/golden-path.md) - the opinionated service path this template should provide.
 - [movie-reservation-domain-vocabulary.md](architecture/movie-reservation-domain-vocabulary.md) - shared domain vocabulary for movie providers, auditoriums, screenings, seats, reservation requests, and reservations.
@@ -75,6 +76,7 @@ Current documents:
 - [ai-review-workflow.md](workflows/ai-review-workflow.md) - how the repository's AI review agents are organized and used.
 - [ci-workflow.md](workflows/ci-workflow.md) - local and GitHub Actions CI commands, jobs, required checks, and test categories.
 - [curated-technology-resources.md](workflows/curated-technology-resources.md) - expanded trusted technology references for AI and human contributors.
+- [debug-postgres-e2e-tests.md](workflows/debug-postgres-e2e-tests.md) - terminal and WebStorm workflow for debugging Postgres-backed e2e tests.
 - [graphql-reservation-query-examples.md](workflows/graphql-reservation-query-examples.md) - local GraphiQL, curl, and Postman examples for the movie reservation story.
 - [git-workflow.md](workflows/git-workflow.md) - branch naming, commit messages, squash merges, and issue-linked workflow.
 

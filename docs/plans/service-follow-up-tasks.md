@@ -10,7 +10,17 @@ This file tracks intentional leftovers from the current movie reservation servic
 - Add owner-only and cross-provider authorization coverage for the Deliverable 4 GraphQL reservation operations. Cover `reservationRequestStatus(id)` and `reservationResult(requestId)` for tenant-admin, tenant-scope, owner, non-owner, and other-provider actors.
 - Add explicit GraphQL e2e coverage for identity propagation: JWT claims should become `authenticatedUser`, then `ActorContext`, then tenant-scoped service/repository calls. Include a case proving GraphQL input cannot override the authenticated `movieProviderId`.
 - Replace the short-term nullable GraphQL read contract for protected reservation resources. `reservationRequestStatus(id)` and `reservationResult(requestId)` currently return `null` for too many cases: not found, unauthorized, not confirmed yet, rejected, failed, and possible data inconsistency. That bucket-of-nulls behavior is acceptable only as a temporary learning step. For a production-shaped API, prefer explicit GraphQL return types such as a union or typed payload that distinguishes success, not found, unauthorized/hidden, pending, rejected, and failed states while still avoiding unsafe cross-tenant information leaks.
-- Review the Deliverable 4 `screenings` seat-loading strategy before the Postgres adapter lands. Decide whether to use GraphQL DataLoader, a batch repository method, a read-model query, or another approach to avoid per-screening lookups with durable persistence.
+- Move resolver-side read-model assembly into the application query/use-case
+  layer. Start with `MovieReservationsResolver.screenings`, which currently
+  lists screenings, batch-loads seats, and joins the nested seat data before
+  mapping to GraphQL. Prefer a small application result such as
+  `listScreeningsWithSeats` first; introduce a dedicated catalog query service
+  only if read-model orchestration grows. Keep GraphQL classes and mappers in
+  the presentation layer.
+- Revisit the `screenings` read shape before production use. D6.1 removes the
+  obvious per-screening seat lookup with a batch repository method, but the API
+  still needs a deliberate read model, pagination, or date-window contract once
+  screening volume grows.
 - Replace generic `Error` throws in movie reservation application use cases with explicit application/domain errors and map them deliberately at the GraphQL boundary. Start with `MovieReservationsService.requestReservation`, where missing screenings and invalid seat selections currently throw generic errors.
 - Revisit `test/schema.test.ts` once the GraphQL API grows. The current string checks are acceptable for the PoC, but later schema verification may be removed, replaced with schema snapshots, or changed to parse the schema structurally.
 - Prefer ISO 8601 UTC timestamp strings for API and persistence boundaries, for example `2026-05-18T08:30:00.000Z`. Add explicit validation or a branded timestamp type before timestamps become caller-provided input.
@@ -23,11 +33,32 @@ This file tracks intentional leftovers from the current movie reservation servic
 - Add repository AI guidance or a dedicated skill for writing useful TypeScript doc comments. The style should explain domain intent, ownership boundaries, runtime/compile-time behavior, and future constraints without restating obvious property names.
 - Revisit the service Prettier `printWidth` after the current feature work is committed. Consider changing it from 80 to 120 in a dedicated formatting/config commit so unrelated line wrapping does not pollute feature reviews.
 
+## Test and Fixture Hygiene
+
+- Keep the D6 UUID contract for service-owned IDs, but reduce repeated raw UUID
+  literals in tests over time. Prefer semantic constants or small local
+  factories for common movie reservation fixtures, while keeping raw UUID
+  examples in tests that specifically prove UUID parsing/validation behavior.
+- Review the current processor/repository tests that inline UUID literals such
+  as `99999999-9999-4999-8999-999999999911` for request, seat, and reservation
+  ids. The UUID shape protects the Postgres-compatible id contract, but the raw
+  literals make the test stories harder to scan. Evaluate better options such
+  as semantic fixture constants, deterministic UUID factories, per-test id
+  builders, or small domain-specific test fixture objects. The goal is to keep
+  valid UUIDs where they matter without hiding the business meaning of
+  `firstRequest`, `secondRequest`, and their selected seats.
+
 ## Local Development Runtime
 
 - Revisit the WebStorm/local app execution setup that currently uses `tsx`. `tsx` keeps local startup simple, but it does not emit TypeScript decorator metadata, so Nest-managed constructors and some GraphQL resolver method parameters need explicit runtime metadata such as `@Inject(...)` or `@Reflect.metadata(...)`.
 - Decide whether to keep the explicit metadata workaround, run local development from compiled `tsc` output, or replace the dev runner with an SWC-based runner configured for legacy decorators and decorator metadata. The goal is to remove avoidable framework/runtime surprises while keeping local execution easy from WebStorm.
 - Add a small dev-runtime smoke check for the chosen local execution path. It should start the service the same way the IDE/dev script does and execute at least one GraphQL query, so constructor injection failures are caught outside the Vitest/SWC path.
+- Implement the service DI composition breakdown immediately after D6 so the minimal `PERSISTENCE_MODE` wiring from the Postgres deliverable becomes an explicit, typed composition profile contract.
+- After the DI composition breakdown, decide whether reservation processing
+  should move into a separate worker package/process/service. D6.1 keeps a fake
+  in-process worker so local development remains simple, but the conceptual
+  control-plane/data-plane split should stay visible.
+- After the DI composition profile contract is in place, containerize the NestJS API for local Docker Compose. The containerized app should use the same checked-in env/profile model as host-based npm development and should be able to run against the Dockerized Postgres service.
 
 ## Authorization Hardening
 
@@ -44,6 +75,10 @@ This file tracks intentional leftovers from the current movie reservation servic
 ## Shared Authentication Library Preparation
 
 - Keep JWT and authentication transport concerns isolated so they can later move into a reusable auth library shared across services.
+- When a second service needs the same behavior, evaluate extracting an
+  internal auth library/package. Treat "auth SDK" as a working shorthand only:
+  the goal is a small reusable service-side auth toolkit, not a broad public SDK
+  with unstable abstractions.
 - Good future library candidates include standards-aware bearer-token extraction from HTTP headers, WebSocket token extraction, JWT/OIDC verification, JWKS caching, issuer/audience/expiry checks, and common authentication error mapping.
 - The current bearer-token helper is intentionally simple for the PoC. A shared implementation should handle more malformed header cases, document whether duplicate or comma-joined authorization headers are accepted, and treat the authentication scheme according to HTTP semantics.
 - Add focused tests for malformed bearer-token and JWT inputs when hardening the shared parser/validator. Keep the current PoC tests focused on the supported happy path and missing-token behavior.
@@ -74,7 +109,34 @@ This file tracks intentional leftovers from the current movie reservation servic
 - When reservation processing is added, prevent double-booking with database-backed guarantees such as a transaction plus a unique constraint on confirmed seats, for example `(screening_id, seat_id)`.
 - Decide the D5 processing trigger before adding durable persistence: worker polling, transactional outbox, queue-first processing, or synchronous processing. Use an outbox if saving a reservation request must reliably signal another process.
 - Decide the durable ordering metadata for reservation processing. The D5 in-memory sequence is operational metadata, not customer/domain API data; a production implementation may use a database identity, timestamp plus id tie-breaker, queue signal, or claim table, but operators still need a visible ordering/correlation signal in logs, traces, metrics, or support tooling.
-- Split reservation processing into a control-plane/data-plane shape after durable state exists. The GraphQL API should own request creation and status/result reads, while a separate worker runtime should claim, process, retry, and emit operator observability for reservation work.
+- D6 should start with a Postgres-owned internal `reservation_requests.sequence` for FIFO claiming. Do not add a dedicated work queue table until retries, leases, delayed work, dead-letter behavior, or multiple worker types make that separation concrete. Keep the work repository port intent-shaped so the adapter can move to a queue/work table later without changing application code.
+- Do not add generic optimistic-locking `version` columns to reservation tables until a concrete lost-update workflow appears. The D6 processor path should use transactions and row locks for claim/confirm behavior. Revisit optimistic locking for future admin edits, mutable catalog workflows, or compare-and-swap state transitions.
+- Split reservation processing into a stronger control-plane/data-plane shape
+  after durable state exists. The GraphQL API should own request creation and
+  status/result reads, while a separate worker runtime should claim, process,
+  retry, and emit operator observability for reservation work. D6.1 models this
+  concept inside one process only.
+- Revisit the worker persistence boundary after D6.1. The current Postgres
+  `ReservationRequestWorkRepository` is intentionally workflow-shaped so the
+  application processor does not know about row locks, leases, claim tokens, and
+  transaction details. Before adding a real worker runtime, queue, payment flow,
+  provider inventory integration, or richer retry taxonomy, re-check that
+  business policy still lives in the application/domain layer and that the
+  Postgres helpers own only atomic persistence mechanics. Rename the port to a
+  clearer gateway/store term if `Repository` starts hiding that distinction.
+- Revisit the reservation request state machine before adding a real queue,
+  separate worker process, or multiple worker types. D6.1 keeps public states
+  simple and stores lease/retry behavior as worker metadata.
+- Expand retry policy design before production use: classify retryable vs
+  non-retryable exceptions, choose fixed/exponential backoff and jitter, define
+  max attempts per failure type, and design dead-letter/manual intervention
+  behavior.
+- Revisit targeted seat validation as a long-term boundary decision. D6.1
+  validates only requested seats, but future availability, pricing, holds, or
+  partial acceptance workflows may need a richer command model.
+- Revisit the full Postgres relational model before adding more writers or
+  runtimes. D6.1 tightens critical provider/screening relationships, but it is
+  still an early schema.
 - Make terminal reservation request transitions and processing attempt recording atomic, or introduce an outbox/observability pipeline. The current in-process implementation guards against misclassifying already-terminal requests, but it is not a production transaction boundary.
 - Replace repeated reservation processing outcome/reason string literals with shared constants or enums once they are used across processor code, tests, persistence mapping, and observability. Keep the discriminated union behavior, but avoid duplicating values such as `failed`, `seat-conflict`, and `unexpected-error` in many places.
 - Add idempotency handling for reservation commands before exposing them to retrying clients, so repeated client submissions can be distinguished from conflicting duplicate work.
@@ -84,6 +146,9 @@ This file tracks intentional leftovers from the current movie reservation servic
 - Evolve `src/config.ts` from flat environment parsing into an explicit configuration contract as modes grow. Future settings such as OIDC, Postgres, SQS, and observability endpoints should document which values are required for each selected mode.
 - Prefer discriminated Zod schemas or focused cross-field validation when settings become conditional, for example `AUTH_MODE=oidc` requiring issuer, audience, and JWKS settings.
 - Add table-driven config tests for valid and invalid profile combinations once the dependency matrix grows beyond the current flat settings.
+- Move local Postgres credentials into an untracked local env/secrets flow or
+  otherwise improve local secret handling soon. D6.1 only reduces exposure by
+  binding Compose Postgres to localhost.
 - Replace shallow env-template static assertions with more meaningful runtime profile smoke tests. Static checks such as "template contains `ENABLE_GRAPHIQL=false`" are acceptable short-term guardrails, but profile behavior is better protected by starting the app with representative profiles and verifying auth, GraphiQL exposure, logging, and health behavior through the public boundaries.
 - Add structured JSON application logging before production-like deployment work. Prefer evaluating Pino as the default NestJS logger because it is a common Node production choice and fits container log collection. Logs should be suitable for container platforms and local observability tooling, with request correlation fields where practical.
 - When Pino is introduced, replace ad hoc key-value log string formatting with structured log objects and define a small application logging interface that can be tested without depending directly on the concrete Pino logger.
@@ -91,4 +156,8 @@ This file tracks intentional leftovers from the current movie reservation servic
 ## Runtime Lifecycle
 
 - Add graceful shutdown handling when the service starts owning resources that need cleanup, such as database pools, worker clients, message consumers, or OpenTelemetry exporters.
-- Define failed-readiness semantics before adding real dependency checks. Decide whether `/ready` returns HTTP 503, a `not-ready` response body, per-check failure details, or a combination that works cleanly for ECS, Kubernetes, Docker Compose, and humans.
+- Preserve a three-layer health model: `/health` answers process liveness, `/ready` answers platform traffic readiness, and business/dependency readiness answers whether required dependencies can currently support the service's business purpose.
+- Define failed-readiness semantics before adding real platform readiness checks. Do not automatically make every dependency failure remove the service from load balancer or Kubernetes readiness; database outages should be visible through dependency probing and observability without necessarily causing process restarts or readiness flapping.
+- During D6/D7, add Postgres as a business dependency check in Postgres mode and report its status through diagnostics/observability. Keep platform probe behavior explicit and conservative.
+- Add migration/seed CLI smoke tests and runtime profile smoke tests once the
+  DI composition/profile refactor has made the runtime matrix explicit.

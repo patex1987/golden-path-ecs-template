@@ -2,23 +2,26 @@
 
 ## 1. Summary
 
-After D4 is merged, refactor the NestJS dependency injection wiring so the root application module stays small as authentication, persistence, workers, observability, and environment-specific runtime profiles grow.
+After D6 adds local Postgres persistence, refactor the NestJS dependency injection wiring so the root application module stays small as authentication, persistence, workers, observability, and environment-specific runtime profiles grow.
 
 The recommended approach is to keep using NestJS dynamic modules, but split provider construction into focused composition units and select those units through a small typed composition profile. This keeps the useful part of the previous Python `svcs` registrar pattern: a named configuration can choose a coherent set of dependency registrations. It avoids copying the risky part: arbitrary module paths in environment variables that TypeScript cannot check during refactors.
 
 ## 2. Goals
 
 - Keep `AppModule` as a small application composition root, not a long provider wiring file.
-- Make environment-specific dependency choices explicit and testable.
+- Make environment-specific dependency choices explicit and testable, including the D6 in-memory and Postgres persistence modes.
 - Split movie reservation composition into smaller provider groups for authentication, repositories, use cases, and readiness checks.
 - Preserve clean architecture boundaries: application and domain stay plain TypeScript, NestJS-specific provider metadata stays at the composition edge.
 - Use Zod config validation to reject unsupported profile and auth combinations at startup.
 - Keep the refactor behavior-preserving for D4 GraphQL APIs.
-- Create a shape that can later support Postgres, OIDC, workers, SQS, and observability without turning one module into a large conditional block.
+- Normalize the minimal persistence-mode wiring introduced by D6 into a clearer composition profile design.
+- Create a shape that can later support OIDC, workers, SQS, API container runtime profiles, and observability without turning one module into a large conditional block.
 
 ## 3. Non-goals
 
-- Do not implement Postgres, OIDC/JWKS, SQS, workers, or OpenTelemetry as part of this refactor.
+- Do not implement Postgres persistence itself; D6 owns that behavior.
+- Do not implement OIDC/JWKS, SQS, workers, or OpenTelemetry as part of this refactor.
+- Do not containerize the service as part of this DI refactor. Track API containerization as a follow-up that uses the finalized profile/env contract.
 - Do not introduce Inversify, tsyringe, or another DI container.
 - Do not use an environment variable containing an arbitrary import path as the primary mechanism.
 - Do not change GraphQL schema behavior from D4.
@@ -36,23 +39,26 @@ The recommended approach is to keep using NestJS dynamic modules, but split prov
 - `movie-reservation-service/src/di/health/health-composition.module.ts` already keeps health service provider wiring separate.
 - `movie-reservation-service/test/di/movie-reservations-composition.module.test.ts` tests that `MovieReservationsCompositionModule` resolves services and handles `local-fixed-user`, `local-jwt`, and not-yet-implemented `oidc`.
 - `movie-reservation-service/test/config/env-profiles.test.ts` checks committed env templates select expected auth modes.
-- D4 is expected to add or modify GraphQL models, resolver operations, repository methods, schema tests, and e2e tests. This plan should be implemented after that work is merged to avoid refactoring an active API branch.
+- D6 is expected to add local Postgres configuration, repository adapters, migrations, and a minimal persistence-mode switch. This plan should be implemented after D6 is merged so it can refactor the real persistence wiring instead of guessing at it.
 
 ## 5. Requirements and Assumptions
 
 ### Confirmed Requirements
 
-- This is a post-D4 plan only. Do not implement it before D4 is merged.
+- This is a post-D6 plan only. Do not implement it before D6 is merged.
 - The refactor should prevent DI wiring from growing into one large root file.
 - The design should provide an equivalent to the Python `svcs` registrar-set pattern, but in idiomatic TypeScript/NestJS.
 - The result should be prioritized later and implemented as a separate work item.
+- The D6 persistence-mode switch should be preserved behaviorally while being moved into clearer typed composition code.
 
 ### Assumptions
 
-- D4 keeps the service on NestJS with GraphQL code-first schema generation.
+- D6 keeps the service on NestJS with GraphQL code-first schema generation.
+- D6 leaves normal local development on in-memory persistence and adds a dedicated local Postgres env file backed by Dockerized Postgres.
 - The service should continue to use npm workspace commands from the repository root.
 - Environment selection should remain based on checked-in env templates and parsed Zod config.
 - For now, `oidc` stays explicit but not implemented unless a separate deliverable lands first.
+- API containerization should happen after the composition profile contract is explicit, so the container and host npm flows use the same configuration model.
 - The first implementation should be a refactor, not a behavior change.
 
 ### Open Questions
@@ -102,9 +108,11 @@ di/movie-reservations/
 The profile should be a small union type inferred from Zod, for example:
 
 ```ts
-COMPOSITION_PROFILE: z
-  .enum(['local-fixed-user', 'local-jwt', 'production-oidc'])
-  .default('local-fixed-user')
+COMPOSITION_PROFILE: z.enum([
+  "local-fixed-user",
+  "local-jwt",
+  "production-oidc",
+]).default("local-fixed-user");
 ```
 
 The exact enum values can be adjusted during implementation, but they should be finite and checked. Avoid `DI_REGISTRAR_PROVIDER=some.module.path` as the default design because arbitrary import paths are weakly typed, harder to bundle, easier to break during refactors, and a poor fit for a learning template that should make the dependency matrix visible.
@@ -189,14 +197,14 @@ Internal configuration/interface changes:
 
 Environment template changes:
 
-- Update `movie-reservation-service/env_files/templates/*.env.template` to include the selected composition profile once names are finalized.
+- Update `movie-reservation-service/env_files/templates/**/*.env.template` to include the selected composition profile once names are finalized.
 - Keep `AUTH_MODE` temporarily if it still provides clear learning value, or derive auth mode from profile if that removes duplication.
 
 ## 9. Data Model / Persistence Changes
 
 None.
 
-This plan is only about dependency wiring. Future Postgres work should add its own plan or extend the persistence deliverable plan.
+This plan is only about dependency wiring. D6 owns the Postgres schema, migrations, and repository behavior; this refactor should only reorganize how those existing adapters are selected.
 
 ## 10. Security, Privacy, and Abuse Considerations
 
@@ -217,16 +225,16 @@ This plan is only about dependency wiring. Future Postgres work should add its o
 
 ## 12. Implementation Steps
 
-1. Confirm D4 baseline and capture current behavior.
-   - Change: Start from the merged D4 branch. Do not implement this plan on top of the pre-D4 branch.
-   - Files/modules likely affected: `movie-reservation-service/src/presentation/graphql/*`, `movie-reservation-service/test/e2e/graphql.test.ts`, `movie-reservation-service/test/schema.test.ts`.
-   - Notes: D4 may change resolver/provider dependencies. Use the merged state as the source of truth.
+1. Confirm D6 baseline and capture current behavior.
+   - Change: Start from the merged D6 branch. Do not implement this plan on top of the pre-D6 branch.
+   - Files/modules likely affected: `movie-reservation-service/src/config.ts`, `movie-reservation-service/src/di/movie-reservations/*`, `movie-reservation-service/src/infrastructure/repositories/in-memory/*`, `movie-reservation-service/src/infrastructure/repositories/postgres/*`, `movie-reservation-service/test/integration/**`.
+   - Notes: D6 may add repository-mode config, Postgres adapters, Knex lifecycle code, and local Postgres tests. Use the merged state as the source of truth.
    - Verification: `npm -w movie-reservation-service run check`.
 
 2. Add typed composition profile config.
    - Change: Add `COMPOSITION_PROFILE` or equivalent to `movie-reservation-service/src/config.ts`.
    - Files/modules likely affected: `src/config.ts`, env templates under `movie-reservation-service/env_files/templates/`, maybe concrete env files under `movie-reservation-service/env_files/`.
-   - Notes: Use Zod enum values, not arbitrary import paths. Keep or update `superRefine` so production/staging cannot select local auth behavior.
+   - Notes: Use Zod enum values, not arbitrary import paths. Keep or update `superRefine` so production/staging cannot select local auth behavior or incomplete persistence configuration. Decide whether the profile owns `AUTH_MODE` and `PERSISTENCE_MODE`, or validates them as separate settings.
    - Verification: Add or update config tests. Run `npm -w movie-reservation-service test -- config`.
 
 3. Introduce top-level app composition mapping.
@@ -244,8 +252,8 @@ This plan is only about dependency wiring. Future Postgres work should add its o
 5. Split repository providers.
    - Change: Move repository binding into `repository.providers.ts`.
    - Files/modules likely affected: `src/di/movie-reservations/repository.providers.ts`, `src/infrastructure/repositories/in-memory/in-memory-movie-reservation.repository.ts`.
-   - Notes: For now this still returns `InMemoryMovieReservationRepository.withSeedData()`. Add a repository mode type only if it clarifies future Postgres selection without overbuilding.
-   - Verification: Composition module test still resolves `MOVIE_RESERVATION_REPOSITORY` and returns seeded data.
+   - Notes: Preserve the D6 behavior for both in-memory and Postgres modes. The refactor should change where provider selection lives, not what each mode does.
+   - Verification: Composition module tests still resolve `MOVIE_RESERVATION_REPOSITORY` and `RESERVATION_REQUEST_WORK_REPOSITORY` for supported modes.
 
 6. Split use-case/application service providers.
    - Change: Move `MovieReservationsService`, `AuthenticationService`, and `AuthorizationService` provider factories into `use-case.providers.ts` or a similarly named file.
@@ -266,16 +274,17 @@ This plan is only about dependency wiring. Future Postgres work should add its o
    - Verification: `npm -w movie-reservation-service test -- di`.
 
 9. Update docs and follow-up notes.
-   - Change: Update any affected docs that describe service composition or config profiles.
-   - Files/modules likely affected: `docs/architecture/graphql-request-flow.md`, `docs/plans/service-follow-up-tasks.md`, `docs/architecture/architecture-decisions.md` if a durable decision is needed.
-   - Notes: If profile selection becomes an architectural convention for future services, record it as an ADR-style entry.
+   - Change: Update any affected docs that describe service composition, config profiles, persistence modes, and the future API containerization task.
+   - Files/modules likely affected: `docs/architecture/graphql-request-flow.md`, `docs/plans/service-follow-up-tasks.md`, `docs/operations/runbook.md`, `docs/architecture/architecture-decisions.md` if a durable decision is needed.
+   - Notes: If profile selection becomes an architectural convention for future services, record it as an ADR-style entry. Keep API containerization as a separate task that reuses this profile/env contract.
    - Verification: Documentation review plus format check.
 
 10. Run final verification.
-   - Change: No code change. Validate the behavior-preserving refactor.
-   - Files/modules likely affected: none.
-   - Notes: Use the narrowest useful commands while iterating, then the full service check before handoff.
-   - Verification: `npm -w movie-reservation-service run check`.
+
+- Change: No code change. Validate the behavior-preserving refactor.
+- Files/modules likely affected: none.
+- Notes: Use the narrowest useful commands while iterating, then the full service check before handoff.
+- Verification: `npm -w movie-reservation-service run check`.
 
 ## 13. Testing Strategy
 
@@ -305,7 +314,7 @@ This plan is only about dependency wiring. Future Postgres work should add its o
 
 ## 14. Rollout / Migration Plan
 
-1. Wait for D4 to merge.
+1. Wait for D6 to merge.
 2. Create a new branch for the DI composition refactor.
 3. Add profile config and mapping while keeping current auth behavior.
 4. Split providers behind the existing `MovieReservationsCompositionModule` facade.
@@ -316,23 +325,26 @@ Rollback is a git revert of the refactor branch. There is no data migration and 
 
 ## 15. Risks and Mitigations
 
-| Risk | Impact | Likelihood | Mitigation |
-|---|---:|---:|---|
-| Refactor collides with D4 files | Medium | Medium | Implement only after D4 is merged and use merged D4 as the baseline |
-| Profile and auth mode duplicate each other confusingly | Medium | Medium | Decide whether profile owns auth mode or Zod validates both together; document the choice |
-| Over-abstraction makes a small service harder to learn | Medium | Medium | Keep one public module facade and split only provider groups that already exist |
-| Invalid production/local combinations slip through | High | Low | Keep Zod `superRefine` coverage and add table-driven config tests |
-| Dynamic import temptation returns later | Medium | Low | Record why typed profiles are preferred; use an ADR if this becomes a template convention |
-| Provider exports accidentally change | Medium | Medium | Preserve existing module tests and add AppModule/profile compile tests |
+| Risk                                                   | Impact | Likelihood | Mitigation                                                                                |
+| ------------------------------------------------------ | -----: | ---------: | ----------------------------------------------------------------------------------------- |
+| Refactor collides with D6 persistence wiring           | Medium |     Medium | Implement only after D6 is merged and use merged D6 as the baseline                       |
+| API containerization sneaks into the DI refactor       | Medium |     Medium | Keep containerization as a follow-up task that reuses the completed profile/env contract  |
+| Profile and auth mode duplicate each other confusingly | Medium |     Medium | Decide whether profile owns auth mode or Zod validates both together; document the choice |
+| Over-abstraction makes a small service harder to learn | Medium |     Medium | Keep one public module facade and split only provider groups that already exist           |
+| Invalid production/local combinations slip through     |   High |        Low | Keep Zod `superRefine` coverage and add table-driven config tests                         |
+| Dynamic import temptation returns later                | Medium |        Low | Record why typed profiles are preferred; use an ADR if this becomes a template convention |
+| Provider exports accidentally change                   | Medium |     Medium | Preserve existing module tests and add AppModule/profile compile tests                    |
 
 ## 16. Done Criteria
 
-- D4 has been merged before this work starts.
+- D6 has been merged before this work starts.
 - `AppModule` remains small and delegates dependency profile decisions to composition code.
 - `MovieReservationsCompositionModule` is split into focused provider factory files.
 - Composition profile config is parsed and validated by Zod.
 - Env templates include the selected composition profile or the plan explicitly documents why profile is derived from existing auth mode.
 - Existing D4 GraphQL behavior is unchanged.
+- D6 in-memory and Postgres persistence modes are still selectable and covered by composition/config tests.
+- API containerization remains tracked as a separate follow-up task.
 - Composition and config tests cover supported and invalid modes.
 - `npm -w movie-reservation-service run check` passes.
 
@@ -356,10 +368,10 @@ Copy/paste this prompt into a coding agent:
 Implement the plan in docs/plans/service-di-composition-breakdown.md.
 
 Constraints:
-- Start only after D4 is merged.
+- Start only after D6 is merged.
 - Stay within the scope of the plan.
 - Do not introduce new dependencies.
-- Do not implement Postgres, OIDC/JWKS, SQS, workers, or OpenTelemetry.
+- Do not implement new Postgres behavior, OIDC/JWKS, SQS, workers, OpenTelemetry, or API containerization.
 - Preserve existing public GraphQL and HTTP behavior.
 - Use typed composition profiles rather than arbitrary env-var import paths.
 - Keep NestJS provider metadata at the composition edge.
