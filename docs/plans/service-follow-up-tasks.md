@@ -31,8 +31,6 @@ This file tracks intentional leftovers from the current movie reservation servic
 ## Developer Documentation Style
 
 - Add repository AI guidance or a dedicated skill for writing useful TypeScript doc comments. The style should explain domain intent, ownership boundaries, runtime/compile-time behavior, and future constraints without restating obvious property names.
-- Revisit the service Prettier `printWidth` after the current feature work is committed. Consider changing it from 80 to 120 in a dedicated formatting/config commit so unrelated line wrapping does not pollute feature reviews.
-
 ## Test and Fixture Hygiene
 
 - Keep the D6 UUID contract for service-owned IDs, but reduce repeated raw UUID
