@@ -124,6 +124,15 @@ This file tracks intentional leftovers from the current movie reservation servic
   business policy still lives in the application/domain layer and that the
   Postgres helpers own only atomic persistence mechanics. Rename the port to a
   clearer gateway/store term if `Repository` starts hiding that distinction.
+- Revisit the mode-specific persistence exports in
+  `MovieReservationsCompositionModule`. The module currently exports
+  `IN_MEMORY_MOVIE_RESERVATION_STORE` or `POSTGRES_KNEX` through
+  `createPersistenceExports(...)` for tests and local composition visibility.
+  A stricter production-style module should prefer exporting only stable
+  application-facing tokens such as `MOVIE_RESERVATION_REPOSITORY` and
+  `RESERVATION_REQUEST_WORK_REPOSITORY`, while keeping persistence internals
+  private. Before changing this, find a cleaner test or diagnostics seam that
+  does not require importing those backing resources directly.
 - Revisit the reservation request state machine before adding a real queue,
   separate worker process, or multiple worker types. D6.1 keeps public states
   simple and stores lease/retry behavior as worker metadata.
@@ -144,6 +153,14 @@ This file tracks intentional leftovers from the current movie reservation servic
 ## Configuration and Logging
 
 - Evolve `src/config.ts` from flat environment parsing into an explicit configuration contract as modes grow. Future settings such as OIDC, Postgres, SQS, and observability endpoints should document which values are required for each selected mode.
+- Defer production database dependency discovery until there is a concrete
+  production runtime and ownership model. Current local and D6 profiles
+  intentionally use an explicit `DATABASE_URL`, but a production platform should
+  provide database connection metadata through a deliberate discovery,
+  configuration, or secrets contract instead of hardcoding database hosts in
+  rendered env files. Candidate mechanisms include AWS Cloud Map, Secrets
+  Manager, SSM Parameter Store, Kubernetes Services/Secrets, or an internal
+  platform dependency registry.
 - Prefer discriminated Zod schemas or focused cross-field validation when settings become conditional, for example `AUTH_MODE=oidc` requiring issuer, audience, and JWKS settings.
 - Add table-driven config tests for valid and invalid profile combinations once the dependency matrix grows beyond the current flat settings.
 - Move local Postgres credentials into an untracked local env/secrets flow or
