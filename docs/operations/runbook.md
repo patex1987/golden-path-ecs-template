@@ -202,7 +202,7 @@ npm -w movie-reservation-service run db:migrate:status
 ```
 
 `set -a` makes variables read from the env file exported, so child processes
-started by `npm` can see `DATABASE_URL`, `PERSISTENCE_MODE`, and the pool
+started by `npm` can see `COMPOSITION_PROFILE`, `DATABASE_URL`, and the pool
 settings. This affects only the current shell session.
 
 Postgres e2e tests use Testcontainers by default:
