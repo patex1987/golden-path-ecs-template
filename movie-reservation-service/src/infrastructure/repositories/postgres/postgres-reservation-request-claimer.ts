@@ -10,6 +10,7 @@ import {
   type ReservationRequestRow,
   toIsoString,
   toReservationRequest,
+  toReservationWorkObservabilityContext,
   toReservationRequestSequence,
 } from './postgres-mappers';
 import type { PostgresReservationRequestStateStore } from './postgres-reservation-request-state-store';
@@ -66,11 +67,14 @@ export class PostgresReservationRequestClaimer {
         incrementLeaseTimeoutCount: isLeaseTimeoutReclaim,
       });
 
+      const observabilityContext = toReservationWorkObservabilityContext(updatedReservationRequest);
+
       return {
         reservationRequest: toReservationRequest(
           updatedReservationRequest,
           await findReservationRequestSeatIds(trx, updatedReservationRequest.id),
         ),
+        ...(observabilityContext === undefined ? {} : { observabilityContext }),
         sequence: toReservationRequestSequence(updatedReservationRequest.sequence),
         claimedBy: input.workerId,
         claimToken: input.claimToken,

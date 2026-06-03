@@ -31,6 +31,7 @@ This file tracks intentional leftovers from the current movie reservation servic
 ## Developer Documentation Style
 
 - Add repository AI guidance or a dedicated skill for writing useful TypeScript doc comments. The style should explain domain intent, ownership boundaries, runtime/compile-time behavior, and future constraints without restating obvious property names.
+
 ## Test and Fixture Hygiene
 
 - Keep the D6 UUID contract for service-owned IDs, but reduce repeated raw UUID
@@ -98,6 +99,16 @@ This file tracks intentional leftovers from the current movie reservation servic
 - Replace the current GraphQL operation logging tests that assert formatted strings with structured-log assertions once Pino or another structured logger is introduced. The current string-containment tests are intentionally short-term and brittle.
 - Alert metrics should be initialized early enough to record both server-side failures and client-side failures such as unauthenticated or malformed requests. This avoids a blind spot where auth middleware rejects a request before metrics are emitted.
 - Revisit the middleware/observability folder structure during the OpenTelemetry deliverable, when the actual logging and tracing tools are in place.
+- Re-evaluate the OpenTelemetry service startup model after the local
+  observability foundation is stable. The current approach is explicit
+  `NodeSDK` setup loaded with Node's `--import` flag, plus selected
+  auto-instrumentation for HTTP, Express, GraphQL, Knex, and pg. Compare that
+  with OpenTelemetry JS zero-code instrumentation, `getNodeAutoInstrumentations`,
+  and a dedicated bootstrap entrypoint that starts observability before
+  dynamically importing the Nest app. The goal is to decide whether the current
+  explicit import-time setup is still the right tradeoff, or whether another
+  startup shape can reduce import-time side effects while preserving the key
+  requirement that instrumentation loads before app dependencies are imported.
 
 ## Persistence Preparation
 

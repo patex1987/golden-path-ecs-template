@@ -62,6 +62,9 @@ export class InMemoryReservationRequestWorkRepository implements ReservationRequ
 
         nextWorkItem = {
           reservationRequest,
+          ...(metadata.observabilityContext === undefined
+            ? {}
+            : { observabilityContext: metadata.observabilityContext }),
           sequence: metadata.sequence,
           claimedBy: input.workerId,
           claimToken: input.claimToken,
@@ -97,6 +100,9 @@ export class InMemoryReservationRequestWorkRepository implements ReservationRequ
     this.store.reservationRequestsById.set(processingReservationRequest.id, processingReservationRequest);
     this.store.updateReservationRequestWorkMetadata(processingReservationRequest.id, {
       sequence: nextWorkItem.sequence,
+      ...(nextWorkItem.observabilityContext === undefined
+        ? {}
+        : { observabilityContext: nextWorkItem.observabilityContext }),
       leaseTimeoutCount: nextWorkItem.leaseTimeoutCount,
       transientFailureCount: nextWorkItem.transientFailureCount,
       claimedBy: input.workerId,
@@ -108,6 +114,9 @@ export class InMemoryReservationRequestWorkRepository implements ReservationRequ
 
     return {
       reservationRequest: processingReservationRequest,
+      ...(nextWorkItem.observabilityContext === undefined
+        ? {}
+        : { observabilityContext: nextWorkItem.observabilityContext }),
       sequence: nextWorkItem.sequence,
       claimedBy: input.workerId,
       claimToken: input.claimToken,
@@ -301,6 +310,7 @@ export class InMemoryReservationRequestWorkRepository implements ReservationRequ
 
     this.store.updateReservationRequestWorkMetadata(reservationRequestId, {
       sequence: metadata.sequence,
+      ...(metadata.observabilityContext === undefined ? {} : { observabilityContext: metadata.observabilityContext }),
       leaseTimeoutCount: metadata.leaseTimeoutCount,
       transientFailureCount: metadata.transientFailureCount,
     });
@@ -322,6 +332,7 @@ export class InMemoryReservationRequestWorkRepository implements ReservationRequ
     this.store.reservationRequestsById.set(failedRequest.id, failedRequest);
     this.store.updateReservationRequestWorkMetadata(failedRequest.id, {
       sequence: metadata.sequence,
+      ...(metadata.observabilityContext === undefined ? {} : { observabilityContext: metadata.observabilityContext }),
       leaseTimeoutCount: metadata.leaseTimeoutCount,
       transientFailureCount: metadata.transientFailureCount,
     });

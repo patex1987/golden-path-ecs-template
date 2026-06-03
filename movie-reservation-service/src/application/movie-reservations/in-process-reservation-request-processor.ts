@@ -3,6 +3,10 @@ import { randomUUID } from 'node:crypto';
 import { createReservation } from '../../domain/movie-reservations/reservation';
 import type { ClaimedReservationRequest } from './claimed-reservation-request';
 import type { Clock } from './ports/clock';
+import {
+  NoopMovieReservationObservability,
+  type MovieReservationObservability,
+} from './ports/movie-reservation-observability';
 import type { ReservationIdGenerator } from './ports/reservation-id-generator';
 import type {
   ReservationRequestProcessor,
@@ -23,6 +27,11 @@ export interface InProcessReservationRequestProcessorOptions {
   readonly maxTransientFailures: number;
   readonly createClaimToken?: () => string;
 }
+
+type UnexpectedFailureProcessingResult = Extract<
+  ReservationRequestProcessingResult,
+  { readonly outcome: 'retryable-failure' | 'failed' }
+>;
 
 const defaultProcessorOptions: InProcessReservationRequestProcessorOptions = {
   workerId: 'manual-in-process-reservation-processor',
@@ -48,11 +57,13 @@ export class InProcessReservationRequestProcessor implements ReservationRequestP
     private readonly reservationIdGenerator: ReservationIdGenerator,
     private readonly clock: Clock,
     private readonly options: InProcessReservationRequestProcessorOptions = defaultProcessorOptions,
+    private readonly observability: MovieReservationObservability = new NoopMovieReservationObservability(),
   ) {}
 
   async processNextPendingRequest(
     input: ReservationRequestProcessingInput = {},
   ): Promise<ReservationRequestProcessingResult> {
+    const durationStartedAt = process.hrtime.bigint();
     const startedAt = this.clock.nowIsoString();
     const claimedWorkItem = await this.workRepository.claimNextPendingReservationRequest({
       workerId: this.options.workerId,
@@ -64,89 +75,154 @@ export class InProcessReservationRequestProcessor implements ReservationRequestP
     });
 
     if (claimedWorkItem === null) {
+      this.observability.recordReservationProcessorOutcome({
+        outcome: 'no-pending-request',
+        durationMs: calculateDurationMs(durationStartedAt),
+      });
       return { outcome: 'no-pending-request' };
     }
 
-    input.onClaimed?.(claimedWorkItem);
-    let terminalStatePersisted = false;
-
-    try {
-      const conflict = await this.workRepository.findConflictingConfirmedReservation({
-        screeningId: claimedWorkItem.reservationRequest.screeningId,
-        seatIds: claimedWorkItem.reservationRequest.seatIds,
-      });
-
-      if (conflict !== null) {
-        const attempt: RejectedReservationRequestProcessingAttempt = {
-          reservationRequestId: claimedWorkItem.reservationRequest.id,
-          sequence: claimedWorkItem.sequence,
-          startedAt,
-          completedAt: this.clock.nowIsoString(),
-          outcome: 'rejected',
-          reason: 'seat-conflict',
-          conflictingReservationId: conflict.id,
-        };
-        const reservationRequest = await this.workRepository.rejectClaimedReservationRequest({
-          claimedWorkItem,
-          reason: 'seat-conflict',
-          attempt,
-        });
-        terminalStatePersisted = true;
-
-        return {
-          outcome: 'rejected',
-          attempt,
-          reservationRequest,
-          reason: 'seat-conflict',
-        };
-      }
-
-      const reservation = createReservation({
-        id: this.reservationIdGenerator.generateReservationId(),
-        movieProviderId: claimedWorkItem.reservationRequest.movieProviderId,
-        reservationRequestId: claimedWorkItem.reservationRequest.id,
-        screeningId: claimedWorkItem.reservationRequest.screeningId,
-        seatIds: claimedWorkItem.reservationRequest.seatIds,
-        reservedByUserId: claimedWorkItem.reservationRequest.requestedByUserId,
-        confirmedAt: this.clock.nowIsoString(),
-      });
-      const attempt: ConfirmedReservationRequestProcessingAttempt = {
+    return this.observability.runWithReservationProcessorSpan(
+      {
         reservationRequestId: claimedWorkItem.reservationRequest.id,
         sequence: claimedWorkItem.sequence,
-        startedAt,
-        completedAt: this.clock.nowIsoString(),
-        outcome: 'confirmed',
-        reservationId: reservation.id,
-      };
-      const confirmResult = await this.workRepository.confirmClaimedReservationRequest({
-        claimedWorkItem,
-        reservation,
-        attempt,
-      });
-      terminalStatePersisted = true;
+        ...(claimedWorkItem.observabilityContext === undefined
+          ? {}
+          : { observabilityContext: claimedWorkItem.observabilityContext }),
+      },
+      async () => {
+        this.observability.recordReservationProcessorClaimed({
+          reservationRequestId: claimedWorkItem.reservationRequest.id,
+          sequence: claimedWorkItem.sequence,
+          ...(claimedWorkItem.observabilityContext === undefined
+            ? {}
+            : { observabilityContext: claimedWorkItem.observabilityContext }),
+        });
+        input.onClaimed?.(claimedWorkItem);
+        let terminalStatePersisted = false;
 
-      if (confirmResult.outcome === 'rejected') {
-        return {
-          outcome: 'rejected',
-          attempt: confirmResult.attempt,
-          reservationRequest: confirmResult.reservationRequest,
-          reason: 'seat-conflict',
-        };
-      }
+        try {
+          const conflict = await this.workRepository.findConflictingConfirmedReservation({
+            screeningId: claimedWorkItem.reservationRequest.screeningId,
+            seatIds: claimedWorkItem.reservationRequest.seatIds,
+          });
 
-      return {
-        outcome: 'confirmed',
-        attempt,
-        reservationRequest: confirmResult.reservationRequest,
-        reservation,
-      };
-    } catch (error) {
-      if (terminalStatePersisted) {
-        throw error;
-      }
+          if (conflict !== null) {
+            const attempt: RejectedReservationRequestProcessingAttempt = {
+              reservationRequestId: claimedWorkItem.reservationRequest.id,
+              sequence: claimedWorkItem.sequence,
+              startedAt,
+              completedAt: this.clock.nowIsoString(),
+              outcome: 'rejected',
+              reason: 'seat-conflict',
+              conflictingReservationId: conflict.id,
+            };
+            const reservationRequest = await this.workRepository.rejectClaimedReservationRequest({
+              claimedWorkItem,
+              reason: 'seat-conflict',
+              attempt,
+            });
+            terminalStatePersisted = true;
+            this.observability.recordReservationProcessorOutcome({
+              outcome: 'rejected',
+              reservationRequestId: reservationRequest.id,
+              sequence: claimedWorkItem.sequence,
+              reason: 'seat-conflict',
+              durationMs: calculateDurationMs(durationStartedAt),
+              ...(claimedWorkItem.observabilityContext === undefined
+                ? {}
+                : { observabilityContext: claimedWorkItem.observabilityContext }),
+            });
 
-      return this.handleUnexpectedFailure(claimedWorkItem, startedAt);
-    }
+            return {
+              outcome: 'rejected',
+              attempt,
+              reservationRequest,
+              reason: 'seat-conflict',
+            };
+          }
+
+          const reservation = createReservation({
+            id: this.reservationIdGenerator.generateReservationId(),
+            movieProviderId: claimedWorkItem.reservationRequest.movieProviderId,
+            reservationRequestId: claimedWorkItem.reservationRequest.id,
+            screeningId: claimedWorkItem.reservationRequest.screeningId,
+            seatIds: claimedWorkItem.reservationRequest.seatIds,
+            reservedByUserId: claimedWorkItem.reservationRequest.requestedByUserId,
+            confirmedAt: this.clock.nowIsoString(),
+          });
+          const attempt: ConfirmedReservationRequestProcessingAttempt = {
+            reservationRequestId: claimedWorkItem.reservationRequest.id,
+            sequence: claimedWorkItem.sequence,
+            startedAt,
+            completedAt: this.clock.nowIsoString(),
+            outcome: 'confirmed',
+            reservationId: reservation.id,
+          };
+          const confirmResult = await this.workRepository.confirmClaimedReservationRequest({
+            claimedWorkItem,
+            reservation,
+            attempt,
+          });
+          terminalStatePersisted = true;
+
+          if (confirmResult.outcome === 'rejected') {
+            this.observability.recordReservationProcessorOutcome({
+              outcome: 'rejected',
+              reservationRequestId: confirmResult.reservationRequest.id,
+              sequence: claimedWorkItem.sequence,
+              reason: 'seat-conflict',
+              durationMs: calculateDurationMs(durationStartedAt),
+              ...(claimedWorkItem.observabilityContext === undefined
+                ? {}
+                : { observabilityContext: claimedWorkItem.observabilityContext }),
+            });
+            return {
+              outcome: 'rejected',
+              attempt: confirmResult.attempt,
+              reservationRequest: confirmResult.reservationRequest,
+              reason: 'seat-conflict',
+            };
+          }
+
+          this.observability.recordReservationProcessorOutcome({
+            outcome: 'confirmed',
+            reservationRequestId: confirmResult.reservationRequest.id,
+            sequence: claimedWorkItem.sequence,
+            durationMs: calculateDurationMs(durationStartedAt),
+            ...(claimedWorkItem.observabilityContext === undefined
+              ? {}
+              : { observabilityContext: claimedWorkItem.observabilityContext }),
+          });
+          return {
+            outcome: 'confirmed',
+            attempt,
+            reservationRequest: confirmResult.reservationRequest,
+            reservation,
+          };
+        } catch (error) {
+          if (terminalStatePersisted) {
+            this.observability.recordReservationProcessorException(error);
+            throw error;
+          }
+
+          const failureResult = await this.handleUnexpectedFailure(claimedWorkItem, startedAt);
+          this.observability.recordReservationProcessorException(error);
+          this.observability.recordReservationProcessorOutcome({
+            outcome: failureResult.outcome,
+            reservationRequestId: failureResult.reservationRequest.id,
+            sequence: claimedWorkItem.sequence,
+            reason: failureResult.reason,
+            durationMs: calculateDurationMs(durationStartedAt),
+            ...(claimedWorkItem.observabilityContext === undefined
+              ? {}
+              : { observabilityContext: claimedWorkItem.observabilityContext }),
+          });
+
+          return failureResult;
+        }
+      },
+    );
   }
 
   /**
@@ -163,7 +239,7 @@ export class InProcessReservationRequestProcessor implements ReservationRequestP
   private async handleUnexpectedFailure(
     claimedWorkItem: ClaimedReservationRequest,
     startedAt: string,
-  ): Promise<ReservationRequestProcessingResult> {
+  ): Promise<UnexpectedFailureProcessingResult> {
     const attempt: FailedReservationRequestProcessingAttempt = {
       reservationRequestId: claimedWorkItem.reservationRequest.id,
       sequence: claimedWorkItem.sequence,
@@ -208,4 +284,8 @@ export class InProcessReservationRequestProcessor implements ReservationRequestP
 
 function addMilliseconds(isoString: string, milliseconds: number): string {
   return new Date(new Date(isoString).getTime() + milliseconds).toISOString();
+}
+
+function calculateDurationMs(startedAt: bigint): number {
+  return Number(process.hrtime.bigint() - startedAt) / 1_000_000;
 }

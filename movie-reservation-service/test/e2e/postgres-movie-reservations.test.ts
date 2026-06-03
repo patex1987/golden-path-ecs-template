@@ -143,6 +143,35 @@ describe('Postgres-backed movie reservation workflow', () => {
     );
   });
 
+  it('persists observability context for claimed reservation work', async () => {
+    const repository = app.get<MovieReservationRepository>(MOVIE_RESERVATION_REPOSITORY);
+    const workRepository = app.get<ReservationRequestWorkRepository>(RESERVATION_REQUEST_WORK_REPOSITORY);
+    const reservationRequest = createReservationRequest({
+      id: createReservationRequestId('99999999-9999-4999-8999-999999999935'),
+      movieProviderId: createMovieProviderId(MOVIE_RESERVATION_DEMO_IDS.providers.aurora),
+      screeningId: createScreeningId(MOVIE_RESERVATION_DEMO_IDS.screenings.auroraTypeSafeMatineeMorning),
+      seatIds: [createSeatId(MOVIE_RESERVATION_DEMO_IDS.seats.auroraA3)],
+      requestedByUserId: createUserId('local-dev-user'),
+    });
+    const observabilityContext = {
+      correlationId: 'postgres-correlation-id',
+      requestId: 'postgres-request-id',
+      traceparent: '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01',
+      tracestate: 'vendor=value',
+    };
+
+    await repository.saveReservationRequest(reservationRequest, observabilityContext);
+
+    await expect(
+      workRepository.claimNextPendingReservationRequest(createClaimInput('claim-observability-context')),
+    ).resolves.toMatchObject({
+      reservationRequest: {
+        id: '99999999-9999-4999-8999-999999999935',
+      },
+      observabilityContext,
+    });
+  });
+
   /**
    * Scenario:
    * - Creates a reservation request through GraphQL.
