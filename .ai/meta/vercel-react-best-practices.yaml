@@ -1,0 +1,3 @@
+type: skill
+skillName: vercel-react-best-practices
+description: "Use when writing, reviewing, or refactoring React or Next.js code for performance, including request waterfalls, bundle size, rendering cost, re-renders, client data fetching, and JavaScript hot paths."

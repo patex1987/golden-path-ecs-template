@@ -1,0 +1,3 @@
+type: skill
+skillName: frontend-observability
+description: "Use when building or reviewing frontend behavior that should create, preserve, or display observability context such as traceparent, tracestate, correlation ids, request ids, GraphQL operation names, logs, metrics, or demo workflows."

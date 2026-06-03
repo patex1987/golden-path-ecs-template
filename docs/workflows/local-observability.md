@@ -157,6 +157,36 @@ They are high-cardinality values. Keep bounded labels such as
 `service_name`, `service_environment`, `container`, and `compose_service`, then
 filter JSON fields in the query.
 
+## React Frontend Demo
+
+The `movie-reservation-web` workspace provides a browser UI for the same
+business workflow used by the manager demo: catalog load, screening selection,
+seat reservation, status polling, and confirmed result lookup.
+
+Start the frontend after the API is running:
+
+```sh
+npm -w movie-reservation-web run dev
+```
+
+Open:
+
+```text
+http://127.0.0.1:5173
+```
+
+By default Vite proxies `/graphql` to `http://127.0.0.1:3001`, which matches
+the containerized API profile. If the API is running on another port:
+
+```sh
+VITE_API_PROXY_TARGET=http://127.0.0.1:3000 npm -w movie-reservation-web run dev
+```
+
+The frontend creates one `X-Correlation-Id` and one W3C trace id for the whole
+visible booking workflow, then sends a fresh `X-Request-Id` for each GraphQL
+HTTP request. The diagnostics panel shows the current ids so they can be copied
+into Tempo, Loki, or Prometheus queries.
+
 ## Smoke Check
 
 After the API and collector are running:

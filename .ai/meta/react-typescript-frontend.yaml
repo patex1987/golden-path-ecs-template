@@ -1,0 +1,3 @@
+type: skill
+skillName: react-typescript-frontend
+description: "Use when creating, refactoring, or explaining React + TypeScript frontend application code, including Vite apps, components, hooks, state, GraphQL clients, routing, and frontend workspace structure."

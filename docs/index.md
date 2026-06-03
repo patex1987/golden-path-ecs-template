@@ -37,6 +37,7 @@ Current documents:
 - [github-actions-ci-foundation.md](plans/github-actions-ci-foundation.md) - implementation plan for the first small GitHub Actions CI workflow.
 - [implementation-plan.md](plans/implementation-plan.md) - overall learning and build plan.
 - [local-observability-foundation.md](plans/local-observability-foundation.md) - implementation plan for local structured logging, OpenTelemetry traces/metrics, API containerization, and collector integration.
+- [movie-reservation-frontend-observability-demo.md](plans/movie-reservation-frontend-observability-demo.md) - implementation plan for the React movie booking UI that drives end-to-end observability demos.
 - [movie-reservation-platform-roadmap.md](plans/movie-reservation-platform-roadmap.md) - roadmap for the movie reservation platform slice.
 - [nestjs-service-migration.md](plans/nestjs-service-migration.md) - completed/active migration plan for moving the service to NestJS.
 - [platform-follow-up-tasks.md](plans/platform-follow-up-tasks.md) - platform, CI/CD, infrastructure workflow, and delivery-system follow-up tasks.

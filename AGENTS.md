@@ -112,10 +112,14 @@ Read the relevant skill file from `.ai/skills/` when the task matches its descri
 
 - **clean-architecture**: Repository-specific skill (read `.ai/skills/clean-architecture/SKILL.md`)
 - **fastify**: Legacy/revisit-only skill for old Fastify service code. Do not use for current service work unless explicitly asked to revisit the HTTP adapter. (read `.ai/skills/fastify/SKILL.md`)
+- **frontend-observability**: Use when building or reviewing frontend behavior that should create, preserve, or display observability context such as traceparent, tracestate, correlation ids, request ids, GraphQL operation names, logs, metrics, or demo workflows. (read `.ai/skills/frontend-observability/SKILL.md`)
+- **frontend-ui-engineering**: Use when building or modifying user-facing interfaces, including layouts, components, visual polish, accessibility, responsive behavior, loading states, error states, and interaction design. (read `.ai/skills/frontend-ui-engineering/SKILL.md`)
 - **nestjs**: Use when implementing, refactoring, or explaining NestJS service code, including controllers, modules, providers, GraphQL resolvers, DTOs, validation, and tests; pair with clean-architecture for layer boundaries. (read `.ai/skills/nestjs/SKILL.md`)
 - **principal-engineer-planner**: Use before implementation to inspect the repository, clarify requirements, compare alternatives, identify risks, and produce an implementation-ready plan under docs/plans/. (read `.ai/skills/principal-engineer-planner/SKILL.md`)
 - **programming-kb**: Use to retrieve focused local programming, backend architecture, system design, and implementation knowledge from /home/patex1987/Documents/programming_kb before broad internet search; validate externally when the user asks or the knowledge may be stale. (read `.ai/skills/programming-kb/SKILL.md`)
+- **react-typescript-frontend**: Use when creating, refactoring, or explaining React + TypeScript frontend application code, including Vite apps, components, hooks, state, GraphQL clients, routing, and frontend workspace structure. (read `.ai/skills/react-typescript-frontend/SKILL.md`)
 - **typescript**: Use when designing or refactoring TypeScript types, function signatures, modules, and application structure. (read `.ai/skills/typescript/SKILL.md`)
+- **vercel-react-best-practices**: Use when writing, reviewing, or refactoring React or Next.js code for performance, including request waterfalls, bundle size, rendering cost, re-renders, client data fetching, and JavaScript hot paths. (read `.ai/skills/vercel-react-best-practices/SKILL.md`)
 - **vitest-testing**: Use when creating, refactoring, reviewing, or explaining TypeScript tests with Vitest, including fake-first testing, reusable fakes, fixture-like setup, NestJS TestingModule tests, e2e tests, and test categorization. (read `.ai/skills/vitest-testing/SKILL.md`)
 
 ## AI Review Agents
