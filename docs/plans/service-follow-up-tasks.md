@@ -31,6 +31,7 @@ This file tracks intentional leftovers from the current movie reservation servic
 ## Developer Documentation Style
 
 - Add repository AI guidance or a dedicated skill for writing useful TypeScript doc comments. The style should explain domain intent, ownership boundaries, runtime/compile-time behavior, and future constraints without restating obvious property names.
+
 ## Test and Fixture Hygiene
 
 - Keep the D6 UUID contract for service-owned IDs, but reduce repeated raw UUID
@@ -45,6 +46,13 @@ This file tracks intentional leftovers from the current movie reservation servic
   builders, or small domain-specific test fixture objects. The goal is to keep
   valid UUIDs where they matter without hiding the business meaning of
   `firstRequest`, `secondRequest`, and their selected seats.
+- Revisit how much test coverage should assert exact structured log content.
+  Some log-contract tests are useful because logs are an operational interface,
+  but broad assertions over every emitted field can make tests brittle and slow
+  down harmless message/schema evolution. Prefer a small number of focused
+  contract tests for required join keys, sensitive-field exclusion, event names,
+  and async handoff fields; avoid repeating full log payload expectations across
+  every API and workflow test.
 
 ## Local Development Runtime
 
@@ -98,6 +106,46 @@ This file tracks intentional leftovers from the current movie reservation servic
 - Replace the current GraphQL operation logging tests that assert formatted strings with structured-log assertions once Pino or another structured logger is introduced. The current string-containment tests are intentionally short-term and brittle.
 - Alert metrics should be initialized early enough to record both server-side failures and client-side failures such as unauthenticated or malformed requests. This avoids a blind spot where auth middleware rejects a request before metrics are emitted.
 - Revisit the middleware/observability folder structure during the OpenTelemetry deliverable, when the actual logging and tracing tools are in place.
+- Revisit the metric zero-initialization strategy after the observability
+  foundation is reviewed. The current approach pre-creates known HTTP,
+  GraphQL, and reservation workflow series so dashboards and alerts do not hide
+  missing data. That is a valid early-service tradeoff, but it may not scale if
+  operation lists grow or if every metric dimension gets zeroed eagerly. Prefer
+  zeroing only business-critical and alerting-critical metrics unless a
+  dashboard or incident workflow has a concrete need for every known series to
+  exist before traffic arrives.
+- Revisit the `infrastructure/observability/metrics/` module layout after this
+  observability foundation is reviewed. The current split avoids one large
+  `metrics.ts` file, but it still centralizes HTTP, GraphQL, and reservation
+  workflow metrics under one metrics folder. Re-check whether some metric
+  helpers should move closer to the code that owns the behavior, for example
+  GraphQL operation metrics beside the GraphQL plugin, HTTP request metrics
+  beside HTTP middleware, and reservation processor metrics beside the
+  reservation observability adapter, while keeping only shared meter/bootstrap
+  concerns centralized.
+- Re-evaluate the OpenTelemetry service startup model after the local
+  observability foundation is stable. The current approach is explicit
+  `NodeSDK` setup loaded with Node's `--import` flag, plus selected
+  auto-instrumentation for HTTP, Express, GraphQL, Knex, and pg. Compare that
+  with OpenTelemetry JS zero-code instrumentation, `getNodeAutoInstrumentations`,
+  and a dedicated bootstrap entrypoint that starts observability before
+  dynamically importing the Nest app. The goal is to decide whether the current
+  explicit import-time setup is still the right tradeoff, or whether another
+  startup shape can reduce import-time side effects while preserving the key
+  requirement that instrumentation loads before app dependencies are imported.
+- Implement the production dashboard follow-up in
+  [production-observability-dashboard.md](production-observability-dashboard.md).
+  The local observability foundation covers traffic, latency, and errors well
+  enough for a v1 dashboard, but saturation still needs reservation backlog,
+  worker pressure, database pool pressure, Node/process pressure, and ECS/ALB
+  platform pressure signals before the project can claim a full operational
+  dashboard and procedure.
+- Review duplicated observability static strings after this branch settles.
+  Likely candidates include log event names, log field names, metric names,
+  metric label names, span names, span attribute names, business operation
+  names, and test assertion strings. Extract constants only where it improves
+  contract stability or removes meaningful drift risk; avoid creating a large
+  constants file that makes call sites harder to read.
 
 ## Persistence Preparation
 
@@ -122,6 +170,14 @@ This file tracks intentional leftovers from the current movie reservation servic
   business policy still lives in the application/domain layer and that the
   Postgres helpers own only atomic persistence mechanics. Rename the port to a
   clearer gateway/store term if `Repository` starts hiding that distinction.
+- Revisit whether reservation processor observability should stay as direct
+  calls to an application-layer port or move to application events. The current
+  `MovieReservationObservability` port keeps Pino/OpenTelemetry details out of
+  the processor while still recording semantic workflow events. If reservation
+  processing later needs multiple subscribers, durable event handling, an
+  outbox, or richer worker-side reactions, prefer explicit application events
+  with observability as one subscriber instead of growing observability calls
+  throughout the processor.
 - Revisit the mode-specific persistence exports in
   `MovieReservationsCompositionModule`. The module currently exports
   `IN_MEMORY_MOVIE_RESERVATION_STORE` or `POSTGRES_KNEX` through
@@ -164,6 +220,12 @@ This file tracks intentional leftovers from the current movie reservation servic
 - Move local Postgres credentials into an untracked local env/secrets flow or
   otherwise improve local secret handling soon. D6.1 only reduces exposure by
   binding Compose Postgres to localhost.
+- Split local env templates into normal profiles and observability-enabled
+  profiles once the observability workflow stabilizes. The current D7 templates
+  enable OpenTelemetry directly so the local collector path is easy to demo, but
+  future developer ergonomics should make observability an explicit choice, for
+  example `local-postgres.env` with observability off and a dedicated
+  `local-postgres-observability.env` profile with OTLP settings enabled.
 - Replace shallow env-template static assertions with more meaningful runtime profile smoke tests. Static checks such as "template contains `ENABLE_GRAPHIQL=false`" are acceptable short-term guardrails, but profile behavior is better protected by starting the app with representative profiles and verifying auth, GraphiQL exposure, logging, and health behavior through the public boundaries.
 - Add structured JSON application logging before production-like deployment work. Prefer evaluating Pino as the default NestJS logger because it is a common Node production choice and fits container log collection. Logs should be suitable for container platforms and local observability tooling, with request correlation fields where practical.
 - When Pino is introduced, replace ad hoc key-value log string formatting with structured log objects and define a small application logging interface that can be tested without depending directly on the concrete Pino logger.
@@ -176,3 +238,15 @@ This file tracks intentional leftovers from the current movie reservation servic
 - During D6/D7, add Postgres as a business dependency check in Postgres mode and report its status through diagnostics/observability. Keep platform probe behavior explicit and conservative.
 - Add migration/seed CLI smoke tests and runtime profile smoke tests once the
   DI composition/profile refactor has made the runtime matrix explicit.
+
+## Container Image Build
+
+- Revisit the API Dockerfile after the local observability runtime is working.
+  The current Dockerfile is a reasonable first multi-stage runtime image, but
+  it should be hardened and optimized before production/CI use. Review BuildKit
+  cache mounts for npm, external build caches for ephemeral CI builders,
+  package-manager install flags, dependency/build/runtime stage separation,
+  base image pinning or digest policy, non-root runtime user behavior, image
+  labels, SBOM/provenance generation, and whether the runtime image should copy
+  only production dependencies plus compiled artifacts instead of pruned
+  workspace `node_modules`.

@@ -95,8 +95,9 @@ GraphQL is for business operations. Do not use GraphQL as the load balancer heal
 
 ## Local Docker Compose Checks
 
-Docker Compose currently starts Postgres only. The NestJS API still runs on the
-host through npm scripts.
+Docker Compose can start Postgres, the app-local OpenTelemetry Collector, and a
+compiled API container. The default `docker compose up -d postgres` path remains
+available for host-based npm development.
 
 Database scripts are split into two layers:
 
@@ -135,6 +136,28 @@ Run the API against Postgres:
 ```sh
 npm -w movie-reservation-service run dev:local-postgres
 ```
+
+Start the local collector when you want traces and metrics from a host-run API:
+
+```sh
+docker compose --profile observability up -d otel-collector
+```
+
+Host-run profiles send OTLP/HTTP to `http://localhost:14318`. The collector
+forwards traces and metrics to `host.docker.internal:4317` by default, which is
+intended to be the external observability stack collector. It also exposes
+Prometheus metrics on `http://localhost:18889/metrics` as a local debugging
+endpoint.
+
+Run the compiled API container after migrations and seed data:
+
+```sh
+docker compose --profile api up -d --build api
+```
+
+The API container uses the in-Docker profile, sends OTLP to
+`http://otel-collector:4318`, writes JSON logs to stdout, and publishes to host
+port `3001` by default so it can run beside Grafana on host port `3000`.
 
 The local Postgres profile enables the fake in-process reservation worker. It
 is useful for local polling workflows, but it is not a production worker
@@ -220,13 +243,22 @@ TEST_DATABASE_URL=postgres://movie_reservation_service:movie_reservation_service
   npm -w movie-reservation-service run test:e2e:external
 ```
 
-Future local checks:
+Observability smoke check:
 
-- service container is running after the API is containerized
-- OpenTelemetry Collector is running
-- observability backend is receiving traces
-- a GraphQL operation produces a trace
-- logs include trace correlation fields after OpenTelemetry is added
+```sh
+npm -w movie-reservation-service run smoke:observability
+```
+
+Local observability checks:
+
+- API responses echo `X-Correlation-Id` and `X-Request-Id`
+- GraphQL operations increment `graphql_operation` metrics
+- collector metrics are visible at `http://localhost:18889/metrics`
+- external Prometheus scrapes the external stack collector after this repo
+  pushes metrics to it over OTLP
+- external Alloy/Loki collects JSON stdout logs from containers labelled
+  `observability.logs=true`
+- traces from the app-local collector reach the external stack collector
 
 ---
 
@@ -251,7 +283,8 @@ Target checks:
 
 - the frontend can call the GraphQL API
 - a browser action produces a backend trace
-- trace context is propagated from frontend to backend where feasible
+- `traceparent`, `tracestate`, `X-Correlation-Id`, and `X-Request-Id` are
+  preserved from frontend to backend where feasible
 - backend logs include the same trace id as the request trace
 - failed reservation requests are visible in both UI state and backend logs
 

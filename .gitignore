@@ -21,3 +21,4 @@ cdk.out/
 npm-debug.log*
 /schema.gql
 docs/TIL.md
+/.idea/compiler.xml

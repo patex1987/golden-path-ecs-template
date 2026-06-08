@@ -90,21 +90,27 @@ Supporting three paths adds maintenance cost. Keep the app contract common acros
 
 ---
 
-## ADR 005: Standardize On OpenTelemetry
+## ADR 005: Standardize On OpenTelemetry For Traces And Metrics
 
-Status: proposed.
+Status: accepted.
 
 ### Decision
 
-Use OpenTelemetry as the common observability contract.
+Use OpenTelemetry as the common observability contract for traces and metrics.
+Keep application logs as structured JSON on stdout.
 
 ### Reason
 
-OpenTelemetry can work across Node, Python, Docker Compose, Kubernetes, and ECS. It gives a shared vocabulary for traces, metrics, logs, resource attributes, and propagation.
+OpenTelemetry can work across Node, Python, Docker Compose, Kubernetes, and
+ECS. It gives a shared vocabulary for traces, metrics, resource attributes, and
+W3C propagation. Logs stay on stdout because that is the least painful path for
+ECS, CloudWatch, local Docker logging, and later Loki collection.
 
 ### Tradeoff
 
-OpenTelemetry setup can feel complex early. Add it incrementally: first local traces, then logs and metrics, then collector pipelines for each runtime.
+OpenTelemetry setup can feel complex early. Add it incrementally: start with
+local traces and bounded business metrics, keep logs as JSON, and evolve
+collector pipelines per runtime.
 
 ---
 

@@ -18,5 +18,56 @@ services:
       timeout: 5s
       retries: 10
 
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    container_name: golden-path-movie-reservations-otel-collector
+    profiles:
+      - api
+      - observability
+    command:
+      - --config=/etc/otel-collector-config.yaml
+    env_file:
+      - ./observability/local-collector.env
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    ports:
+      - "127.0.0.1:14317:4317"
+      - "127.0.0.1:14318:4318"
+      - "127.0.0.1:18889:8889"
+    volumes:
+      - ./observability/otel-collector.yaml:/etc/otel-collector-config.yaml:ro
+
+  api:
+    build:
+      context: .
+      dockerfile: movie-reservation-service/Dockerfile
+    container_name: golden-path-movie-reservations-api
+    profiles:
+      - api
+    env_file:
+      - ./movie-reservation-service/env_files/templates/in-docker/local-postgres.env.template
+    environment:
+      OTEL_METRIC_EXPORT_INTERVAL: "5000"
+    ports:
+      - "127.0.0.1:${MOVIE_RESERVATION_API_HOST_PORT:-3001}:3000"
+    labels:
+      observability.logs: "true"
+      service.name: "movie-reservation-service"
+      service.environment: "local"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - "-e"
+        - "fetch('http://127.0.0.1:3000/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
 volumes:
   movie_reservation_postgres_data:
