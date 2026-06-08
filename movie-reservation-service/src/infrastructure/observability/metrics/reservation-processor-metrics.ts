@@ -29,6 +29,8 @@ const reservationProcessorOutcomes: readonly ReservationProcessorOutcome[] = [
 
 /**
  * Pre-creates bounded reservation processor outcome metric series.
+ *
+ * For more information, see: https://prometheus.io/docs/practices/instrumentation/#avoid-missing-metrics
  */
 export function initializeReservationProcessorMetricSeries(): void {
   for (const outcome of reservationProcessorOutcomes) {
