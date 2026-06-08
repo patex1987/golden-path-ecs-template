@@ -213,6 +213,12 @@ This file tracks intentional leftovers from the current movie reservation servic
 - Move local Postgres credentials into an untracked local env/secrets flow or
   otherwise improve local secret handling soon. D6.1 only reduces exposure by
   binding Compose Postgres to localhost.
+- Split local env templates into normal profiles and observability-enabled
+  profiles once the observability workflow stabilizes. The current D7 templates
+  enable OpenTelemetry directly so the local collector path is easy to demo, but
+  future developer ergonomics should make observability an explicit choice, for
+  example `local-postgres.env` with observability off and a dedicated
+  `local-postgres-observability.env` profile with OTLP settings enabled.
 - Replace shallow env-template static assertions with more meaningful runtime profile smoke tests. Static checks such as "template contains `ENABLE_GRAPHIQL=false`" are acceptable short-term guardrails, but profile behavior is better protected by starting the app with representative profiles and verifying auth, GraphiQL exposure, logging, and health behavior through the public boundaries.
 - Add structured JSON application logging before production-like deployment work. Prefer evaluating Pino as the default NestJS logger because it is a common Node production choice and fits container log collection. Logs should be suitable for container platforms and local observability tooling, with request correlation fields where practical.
 - When Pino is introduced, replace ad hoc key-value log string formatting with structured log objects and define a small application logging interface that can be tested without depending directly on the concrete Pino logger.
@@ -225,3 +231,15 @@ This file tracks intentional leftovers from the current movie reservation servic
 - During D6/D7, add Postgres as a business dependency check in Postgres mode and report its status through diagnostics/observability. Keep platform probe behavior explicit and conservative.
 - Add migration/seed CLI smoke tests and runtime profile smoke tests once the
   DI composition/profile refactor has made the runtime matrix explicit.
+
+## Container Image Build
+
+- Revisit the API Dockerfile after the local observability runtime is working.
+  The current Dockerfile is a reasonable first multi-stage runtime image, but
+  it should be hardened and optimized before production/CI use. Review BuildKit
+  cache mounts for npm, external build caches for ephemeral CI builders,
+  package-manager install flags, dependency/build/runtime stage separation,
+  base image pinning or digest policy, non-root runtime user behavior, image
+  labels, SBOM/provenance generation, and whether the runtime image should copy
+  only production dependencies plus compiled artifacts instead of pruned
+  workspace `node_modules`.
