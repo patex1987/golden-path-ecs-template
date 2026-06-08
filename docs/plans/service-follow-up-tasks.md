@@ -46,6 +46,13 @@ This file tracks intentional leftovers from the current movie reservation servic
   builders, or small domain-specific test fixture objects. The goal is to keep
   valid UUIDs where they matter without hiding the business meaning of
   `firstRequest`, `secondRequest`, and their selected seats.
+- Revisit how much test coverage should assert exact structured log content.
+  Some log-contract tests are useful because logs are an operational interface,
+  but broad assertions over every emitted field can make tests brittle and slow
+  down harmless message/schema evolution. Prefer a small number of focused
+  contract tests for required join keys, sensitive-field exclusion, event names,
+  and async handoff fields; avoid repeating full log payload expectations across
+  every API and workflow test.
 
 ## Local Development Runtime
 
