@@ -21,6 +21,12 @@ This file tracks intentional leftovers from the current movie reservation servic
   obvious per-screening seat lookup with a batch repository method, but the API
   still needs a deliberate read model, pagination, or date-window contract once
   screening volume grows.
+- Account for frontend catalog overfetch when revisiting the `screenings` read
+  shape. The first React frontend can load all nested seats for the demo, but a
+  production-shaped catalog should avoid fetching every seat for every screening
+  on initial page load. Consider metadata-first catalog reads, a selected
+  screening seat query, date windows, or a dedicated application-layer catalog
+  read model before the schedule grows.
 - Replace generic `Error` throws in movie reservation application use cases with explicit application/domain errors and map them deliberately at the GraphQL boundary. Start with `MovieReservationsService.requestReservation`, where missing screenings and invalid seat selections currently throw generic errors.
 - Revisit `test/schema.test.ts` once the GraphQL API grows. The current string checks are acceptable for the PoC, but later schema verification may be removed, replaced with schema snapshots, or changed to parse the schema structurally.
 - Prefer ISO 8601 UTC timestamp strings for API and persistence boundaries, for example `2026-05-18T08:30:00.000Z`. Add explicit validation or a branded timestamp type before timestamps become caller-provided input.

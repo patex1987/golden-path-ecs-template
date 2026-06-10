@@ -262,7 +262,11 @@ The project should demonstrate:
 
 ## CI workflow
 
-Use `npm run ci` from the repository root to run the local CI contract for the service and CDK workspaces. The GitHub Actions workflow uses Node 24 from `.nvmrc` and runs the same categories as separate pull request checks.
+Use `npm run ci` from the repository root to run the current small-repo local CI
+contract for the service, web, and CDK workspaces. The GitHub Actions workflow
+uses Node 24 from `.nvmrc` and runs the same categories as separate pull request
+checks. The future scalable monorepo CI split is tracked separately in issue
+#31.
 
 See [docs/workflows/ci-workflow.md](docs/workflows/ci-workflow.md) for the CI jobs, required checks, and test category definitions.
 

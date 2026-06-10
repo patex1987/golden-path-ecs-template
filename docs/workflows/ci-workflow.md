@@ -2,7 +2,9 @@
 
 This repository uses a small GitHub Actions CI foundation for pull requests, pushes to `main`, and manual runs.
 
-The workflow is intentionally deployment-free. It proves the service and CDK workspaces are formatted, linted, typed, tested, buildable, and CDK-synthesizable without using AWS credentials or repository secrets.
+The workflow is intentionally deployment-free. It proves the service, web, and
+CDK workspaces are typed, tested, buildable, and CDK-synthesizable where
+applicable without using AWS credentials or repository secrets.
 
 ## Local Commands
 
@@ -17,7 +19,14 @@ That delegates to the workspace-owned CI commands:
 ```sh
 npm -w movie-reservation-service run ci
 npm -w ecs-infra run ci
+npm -w movie-reservation-web run check
 ```
+
+This is the current small-repo monorepo contract: the root `ci` command runs all
+three workspaces so local and pull-request checks do not forget the frontend.
+Issue #31 owns the future CI design for affected/path-filtered workspace checks,
+Playwright browser tests, Docker/Postgres e2e checks, and slower merge-time
+integration jobs once the repository grows.
 
 The local service `ci` script includes `test:e2e`, so it requires Docker for
 the Testcontainers Postgres database. The GitHub Actions workflow currently
@@ -56,15 +65,18 @@ Current in-process NestJS Supertest checks are integration/API contract tests be
 
 ## GitHub Actions Jobs
 
-The workflow at `.github/workflows/ci.yml` exposes five required CI-1 jobs:
+The workflow at `.github/workflows/ci.yml` exposes six required CI-1 jobs:
 
 - `service-quality`: service format check, lint checks, and TypeScript typecheck.
 - `service-unit-tests`: service unit tests.
 - `service-integration-tests`: service thin integration/API contract tests.
 - `service-build`: service TypeScript build.
 - `infra`: CDK workspace build, Jest tests, and `cdk synth`.
+- `web`: frontend TypeScript typecheck, Vitest tests, and Vite production build.
 
-`service-unit-tests`, `service-integration-tests`, `service-build`, and `infra` run after `service-quality` passes. This keeps fast static feedback first while still making failure categories visible in pull request checks.
+`service-unit-tests`, `service-integration-tests`, `service-build`, and `infra`
+run after `service-quality` passes. The `web` job runs separately so frontend
+failures are visible as their own pull request check.
 
 ## Required Checks
 
@@ -75,12 +87,22 @@ Branch protection or a GitHub repository ruleset should require these checks bef
 - `service-integration-tests`
 - `service-build`
 - `infra`
+- `web`
 
 GitHub may require the workflow to run once before these status checks are available to select in repository settings.
 
 ## Deferred Work
 
-CI-1 does not include deployment, Docker image publishing, dependency audit gates, action SHA pinning, custom caches, artifact uploads, test reports, special PR annotations, Node matrices, Docker/Testcontainers e2e checks, or deployed smoke tests.
+CI-1 does not include deployment, Docker image publishing, dependency audit
+gates, action SHA pinning, custom caches, artifact uploads, test reports,
+special PR annotations, Node matrices, Docker/Testcontainers e2e checks,
+Playwright browser checks, affected/path-filtered workspace selection, or
+deployed smoke tests.
+
+Issue #31 tracks the next CI strategy wave: keep fast workspace checks stable,
+decide which checks should be path/affected-filtered, decide where Playwright
+frontend/backend tests run, and design Docker/Postgres e2e without making normal
+pull request checks flaky.
 
 Postgres e2e tests should be added later as a separate CI job after the Docker
 runtime strategy is chosen. On GitHub-hosted Ubuntu runners, Testcontainers can

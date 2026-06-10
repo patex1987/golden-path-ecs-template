@@ -35,13 +35,40 @@ This is the preferred build order for the full-blown shape:
 
 The order is intentional: make the app behavior clear locally before adding managed infrastructure.
 
+### Current Progress Snapshot
+
+Completed:
+
+- D4 movie reservation GraphQL polling API: #1.
+- CI-1 GitHub Actions CI foundation: #14.
+- D5 in-process processor contract: #2.
+- D6 Docker Compose, Postgres, and Knex persistence: #3.
+- DI composition profile refactor: #18.
+- D7 local observability foundation, including structured JSON logs,
+  OpenTelemetry traces/metrics, minimal API containerization, and app-local
+  collector wiring: #4.
+
+Current focus:
+
+- D8 React + Vite frontend demonstrator: #5.
+- First D8 subtask: #23, rebase/adopt the existing
+  `observability_demo_plus_frontend` spike onto current `main` without carrying
+  stale backend observability rewrites.
+
+Still upcoming:
+
+- D9 cheap ECS CDK foundation.
+- D10 RDS and migration task.
+- D11 durable worker signaling.
+- D12 k3d/Kubernetes target.
+
 ---
 
 ## Current Direction
 
 ### Primary application
 
-Use `service/` as the first NestJS application.
+Use `movie-reservation-service/` as the first NestJS application.
 
 It should teach:
 
@@ -104,7 +131,7 @@ Understand the repository responsibilities.
 
 ## Phase 1: Convert the Service to NestJS and Reshape the Domain
 
-Status: in progress.
+Status: completed for the current movie reservation slice.
 
 ### Goal
 
@@ -151,6 +178,10 @@ The service runs locally as a NestJS app and has both REST health endpoints and 
 
 ## Phase 2: Validation, Error Handling, Logging, and Tests
 
+Status: mostly completed for the current local service shape. Some production
+API semantics and explicit domain/application error follow-ups remain in
+`docs/plans/service-follow-up-tasks.md`.
+
 ### Goal
 
 Make the NestJS service production-shaped without adding real persistence yet.
@@ -186,6 +217,8 @@ Use the Nest path first because learning NestJS is the priority.
 
 ## Phase 3: Add OpenTelemetry Locally
 
+Status: completed by D7 / issue #4.
+
 ### Goal
 
 Introduce observability before AWS, so traces and logs are not an afterthought.
@@ -213,6 +246,11 @@ One local request should produce logs and a trace that share enough context to f
 
 ## Phase 4: Docker Compose Developer Environment
 
+Status: completed for the current local scope. Compose can run Postgres, the API
+container, and the app-local OpenTelemetry Collector. The external Grafana,
+Tempo, Loki, and Prometheus stack remains a sibling observability stack rather
+than a full backend owned by this repository.
+
 ### Goal
 
 Make local development easy and repeatable.
@@ -236,6 +274,9 @@ Docker Compose is for developer speed, not production parity at any cost. It sho
 ---
 
 ## Phase 5: CDK Foundation
+
+Status: not started. This should wait until the frontend demonstrator is useful
+enough to prove the app workflow and observability contract locally.
 
 ### Goal
 
@@ -477,10 +518,12 @@ This matters because the goal is not only to have a working template. The goal i
 
 ## Current Next Steps
 
-1. Reshape the current booking domain into movie reservation concepts.
-2. Add movie/screening/reservation GraphQL models and queries.
-3. Add `requestReservation` and `reservationRequest` polling.
-4. Keep the in-memory repository until the workflow is clear.
-5. Update tests around the new domain and GraphQL contract.
-6. Add Dockerfile and Docker Compose only after the local service behavior is stable.
-7. Add local OpenTelemetry before starting the ECS CDK foundation.
+1. Start #23 from current `main`.
+2. Port only the useful frontend spike pieces from
+   `observability_demo_plus_frontend`; do not carry stale backend observability
+   rewrites.
+3. Add the frontend workspace foundation and GraphQL client in #24.
+4. Build the reservation workflow UI and polling states in #25.
+5. Add frontend observability diagnostics and demo workflow docs in #26.
+6. Finish D8 verification, docs, and CI wiring in #27.
+7. Then move to D9, the cheap ECS CDK foundation.

@@ -430,6 +430,8 @@ Authorization research candidates:
 
 ### Deliverable 4: Add Movie Reservation GraphQL Polling API
 
+Status: completed by #1.
+
 - Change: Add code-first GraphQL models, inputs, mappers, resolver operations, and schema tests for movie reservation operations.
 - Files/modules likely affected: `movie-reservation-service/src/presentation/graphql`, `movie-reservation-service/schema.gql`, `movie-reservation-service/test/e2e`, `movie-reservation-service/test/schema.test.ts`.
 - Notes: Commands and queries should pass `ActorContext` into application services.
@@ -439,6 +441,8 @@ Authorization research candidates:
   - `npm -w movie-reservation-service run check`
 
 ### Deliverable CI-1: Add GitHub Actions CI Foundation
+
+Status: completed by #14.
 
 - Change: Add a root `npm run ci` command and a small GitHub Actions workflow for pull requests and pushes to `main`.
 - Files/modules likely affected: root `package.json`, `.nvmrc`, `movie-reservation-service/package.json`, `movie-reservation-service/test/**`, `ecs-infra/package.json`, `.github/workflows/ci.yml`, `README.md`, `docs/index.md`, `docs/workflows/ci-workflow.md`, `docs/plans/github-actions-ci-foundation.md`.
@@ -452,6 +456,8 @@ Authorization research candidates:
 
 ### Deliverable 5: Add In-Process Processor Contract
 
+Status: completed by #2.
+
 - Change: Add `ReservationRequestProcessor` contract and in-memory implementation for claiming/processing pending reservation requests.
 - Files/modules likely affected: application processor contract, in-memory processor/repository adapter, reservation service, tests.
 - Notes: Avoid timer-heavy tests. Tests should drive the processor deterministically.
@@ -462,6 +468,8 @@ Authorization research candidates:
 
 ### Deliverable 6: Add Docker Compose, Postgres, and Knex
 
+Status: completed by #3.
+
 - Change: Add local Postgres, Knex config, migrations, and Postgres repository adapter.
 - Files/modules likely affected: root compose files, `movie-reservation-service/package.json`, service config, migrations, repository adapter, docs/operations.
 - Notes: Keep in-memory tests and add focused Testcontainers e2e tests against Postgres. Keep an external/manual database e2e mode for Docker Compose or developer-managed Postgres.
@@ -471,6 +479,8 @@ Authorization research candidates:
   - Constraints prevent double-confirming the same screening seat.
 
 ### Deliverable DI-1: Refine Service DI Composition Profiles
+
+Status: completed by #18.
 
 - Change: Refactor the NestJS composition wiring after D6 so auth and persistence choices are selected through explicit typed composition profiles instead of growing one large conditional module.
 - Files/modules likely affected: `movie-reservation-service/src/config.ts`, `movie-reservation-service/src/app.module.ts`, `movie-reservation-service/src/di/movie-reservations`, service env files/templates, composition/config tests, `docs/plans/service-di-composition-breakdown.md`.
@@ -483,6 +493,8 @@ Authorization research candidates:
 
 ### Deliverable Docker-1: Containerize the NestJS API for Local Compose
 
+Status: completed as part of #4.
+
 - Change: Add a local Docker image/runtime path for the NestJS API after the DI profile contract is explicit.
 - Files/modules likely affected: service Dockerfile or Docker build config, root compose files, service env files/templates, local run docs, docs/operations.
 - Notes: The containerized API should use the same checked-in env/profile model as host-based npm development and should run against Dockerized Postgres. Keep observability out until Deliverable 7.
@@ -493,6 +505,8 @@ Authorization research candidates:
   - Local docs include the host-npm and Compose-container run paths.
 
 ### Deliverable 7: Add Local Observability
+
+Status: completed by #4.
 
 - Change: Add OpenTelemetry SDK setup, auto-instrumentation where practical, structured logging, metrics, collector config, Tempo, Loki, Prometheus, and Grafana.
 - Files/modules likely affected: service bootstrap/config, Docker Compose, observability config folders, docs/operations.
@@ -505,9 +519,11 @@ Authorization research candidates:
 
 ### Deliverable 8: Add React + Vite Frontend Demonstrator
 
+Status: active next deliverable. Parent issue: #5. First subtask: #23.
+
 - Change: Add a frontend workspace for movie, screening, seat selection, reservation request, and polling status.
 - Files/modules likely affected: new frontend workspace, root `package.json`, Docker Compose, docs.
-- Notes: This is a workflow demonstrator, not a marketing page. Next.js/SSR is deferred.
+- Notes: This is a workflow demonstrator, not a marketing page. Next.js/SSR is deferred. Start by porting only the useful additive frontend pieces from `observability_demo_plus_frontend` onto current `main`; do not carry stale backend observability rewrites from that spike.
 - Verification:
   - Browser flow can request a reservation and poll status.
   - Frontend-originated request can be found in backend traces/logs.
