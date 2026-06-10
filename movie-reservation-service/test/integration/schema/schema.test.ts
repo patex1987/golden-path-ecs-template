@@ -52,6 +52,7 @@ describe('generated GraphQL schema', () => {
     expect(schema).toContain('type Movie');
     expect(schema).toContain('type Screening');
     expect(schema).toContain('type Seat');
+    expect(schema).toContain('isReserved: Boolean!');
     expect(schema).toContain('type ReservationRequest');
     expect(schema).toContain('type Reservation');
     expect(schema).toContain('enum ReservationRequestStatus');

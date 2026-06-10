@@ -67,6 +67,14 @@ export interface MovieReservationRepository {
   ): Promise<ReadonlyMap<ScreeningId, readonly Seat[]>>;
 
   /**
+   * Batch-loads confirmed reservation seat ids for provider-owned screenings.
+   */
+  findReservedSeatIdsByScreeningIds(
+    movieProviderId: MovieProviderId,
+    screeningIds: readonly ScreeningId[],
+  ): Promise<ReadonlyMap<ScreeningId, ReadonlySet<SeatId>>>;
+
+  /**
    * Finds only the requested seats when they belong to a provider-owned
    * screening's auditorium.
    */

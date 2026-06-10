@@ -385,6 +385,7 @@ describe('movie reservation GraphQL polling API with local-fixed-user auth', () 
               id
               row
               number
+              isReserved
             }
           }
         }`,
@@ -403,9 +404,9 @@ describe('movie reservation GraphQL polling API with local-fixed-user auth', () 
     expect(response.body.data.screenings[0].seats).toHaveLength(32);
     expect(response.body.data.screenings[0].seats).toEqual(
       expect.arrayContaining([
-        { id: '66666666-6666-4666-8666-666666666661', row: 'A', number: 1 },
-        { id: '66666666-6666-4666-8666-666666666662', row: 'A', number: 2 },
-        { id: '66666666-6666-4666-8666-666666666663', row: 'A', number: 3 },
+        { id: '66666666-6666-4666-8666-666666666661', row: 'A', number: 1, isReserved: true },
+        { id: '66666666-6666-4666-8666-666666666662', row: 'A', number: 2, isReserved: true },
+        { id: '66666666-6666-4666-8666-666666666663', row: 'A', number: 3, isReserved: false },
       ]),
     );
   });

@@ -7,6 +7,7 @@ from movie_reservation_mcp.graphql_client import (
     build_graphql_request,
     parse_graphql_response,
     read_required_list,
+    SCREENINGS_QUERY,
 )
 
 
@@ -60,6 +61,9 @@ class GraphqlClientHelpersTest(unittest.TestCase):
                 "movies",
                 "MovieMcpListMovies",
             )
+
+    def test_screenings_query_includes_reserved_seat_flag(self) -> None:
+        self.assertIn("isReserved", SCREENINGS_QUERY)
 
 
 if __name__ == "__main__":

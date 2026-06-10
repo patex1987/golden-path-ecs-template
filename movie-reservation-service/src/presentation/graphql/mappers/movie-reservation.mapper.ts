@@ -3,6 +3,7 @@ import type { Reservation } from '../../../domain/movie-reservations/reservation
 import type { ReservationRequest } from '../../../domain/movie-reservations/reservation-request';
 import type { Screening } from '../../../domain/movie-reservations/screening';
 import type { Seat } from '../../../domain/movie-reservations/seat';
+import type { SeatId } from '../../../domain/movie-reservations/seat-id';
 import { MovieGql } from '../models/movie.gql';
 import { ReservationGql } from '../models/reservation.gql';
 import { ReservationRequestGql } from '../models/reservation-request.gql';
@@ -22,22 +23,27 @@ export function toMovieGql(movie: Movie): MovieGql {
   return gql;
 }
 
-export function toScreeningGql(screening: Screening, seats: readonly Seat[]): ScreeningGql {
+export function toScreeningGql(
+  screening: Screening,
+  seats: readonly Seat[],
+  reservedSeatIds: ReadonlySet<SeatId> = new Set<SeatId>(),
+): ScreeningGql {
   const gql = new ScreeningGql();
   gql.id = screening.id;
   gql.movieId = screening.movieId;
   gql.auditoriumId = screening.auditoriumId;
   gql.startsAt = screening.startsAt;
   gql.endsAt = screening.endsAt;
-  gql.seats = seats.map(toSeatGql);
+  gql.seats = seats.map((seat) => toSeatGql(seat, reservedSeatIds.has(seat.id)));
   return gql;
 }
 
-export function toSeatGql(seat: Seat): SeatGql {
+export function toSeatGql(seat: Seat, isReserved = false): SeatGql {
   const gql = new SeatGql();
   gql.id = seat.id;
   gql.row = seat.row;
   gql.number = seat.number;
+  gql.isReserved = isReserved;
   return gql;
 }
 

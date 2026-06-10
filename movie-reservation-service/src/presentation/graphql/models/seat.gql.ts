@@ -18,4 +18,9 @@ export class SeatGql {
     description: 'Seat number within the row.',
   })
   number!: number;
+
+  @Field(() => Boolean, {
+    description: 'True when a confirmed reservation already holds this seat for the current screening.',
+  })
+  isReserved!: boolean;
 }

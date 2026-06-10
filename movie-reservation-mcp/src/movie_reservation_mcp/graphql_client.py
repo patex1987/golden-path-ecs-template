@@ -342,6 +342,7 @@ query MovieMcpListScreenings($movieId: ID) {
       id
       row
       number
+      isReserved
     }
   }
 }

@@ -139,6 +139,41 @@ export class PostgresMovieReservationRepository implements MovieReservationRepos
     return seatsByScreeningId;
   }
 
+  async findReservedSeatIdsByScreeningIds(
+    movieProviderId: MovieProviderId,
+    screeningIds: readonly ScreeningId[],
+  ): Promise<ReadonlyMap<ScreeningId, ReadonlySet<SeatId>>> {
+    const reservedSeatIdsByScreeningId = new Map<ScreeningId, Set<SeatId>>();
+
+    for (const screeningId of screeningIds) {
+      reservedSeatIdsByScreeningId.set(screeningId, new Set<SeatId>());
+    }
+
+    if (screeningIds.length === 0) {
+      return reservedSeatIdsByScreeningId;
+    }
+
+    const rows = await this.database<{
+      readonly screening_id: string;
+      readonly seat_id: string;
+    }>('reservation_seats')
+      .select('screening_id', 'seat_id')
+      .where({ movie_provider_id: movieProviderId })
+      .whereIn('screening_id', screeningIds)
+      .orderBy('screening_id', 'asc')
+      .orderBy('seat_id', 'asc');
+
+    for (const row of rows) {
+      const screeningId = createScreeningId(row.screening_id);
+      const seatIds = reservedSeatIdsByScreeningId.get(screeningId) ?? new Set<SeatId>();
+
+      seatIds.add(createSeatId(row.seat_id));
+      reservedSeatIdsByScreeningId.set(screeningId, seatIds);
+    }
+
+    return reservedSeatIdsByScreeningId;
+  }
+
   async findSeatsByIdsForScreening(
     movieProviderId: MovieProviderId,
     screeningId: ScreeningId,

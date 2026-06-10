@@ -57,13 +57,18 @@ describe('InMemoryMovieReservationRepository', () => {
 
   it('seeds screenings and seats for provider-scoped catalog flows', async () => {
     const repository = InMemoryMovieReservationRepository.withSeedData();
+    const screeningId = createScreeningId('55555555-5555-4555-8555-555555555551');
 
     const auroraScreenings = await repository.findScreeningsByProviderId(
       createMovieProviderId('11111111-1111-4111-8111-111111111111'),
     );
     const auroraSeats = await repository.findSeatsByScreeningId(
       createMovieProviderId('11111111-1111-4111-8111-111111111111'),
-      createScreeningId('55555555-5555-4555-8555-555555555551'),
+      screeningId,
+    );
+    const reservedSeatIdsByScreeningId = await repository.findReservedSeatIdsByScreeningIds(
+      createMovieProviderId('11111111-1111-4111-8111-111111111111'),
+      [screeningId],
     );
 
     expect(auroraScreenings.length).toBeGreaterThanOrEqual(8);
@@ -74,6 +79,10 @@ describe('InMemoryMovieReservationRepository', () => {
         expect.objectContaining({ id: '66666666-6666-4666-8666-666666666662' }),
       ]),
     );
+    expect([...(reservedSeatIdsByScreeningId.get(screeningId) ?? [])]).toEqual([
+      '66666666-6666-4666-8666-666666666661',
+      '66666666-6666-4666-8666-666666666662',
+    ]);
   });
 
   it('seeds reservation request state with multiple selected seats', async () => {

@@ -80,6 +80,16 @@ export class MovieReservationsService {
   }
 
   /**
+   * Batch-load confirmed reservation seat ids for provider-owned screenings.
+   */
+  async listReservedSeatIdsForScreenings(
+    actor: ActorContext,
+    screeningIds: readonly ScreeningId[],
+  ): Promise<ReadonlyMap<ScreeningId, ReadonlySet<SeatId>>> {
+    return this.repository.findReservedSeatIdsByScreeningIds(actor.movieProviderId, screeningIds);
+  }
+
+  /**
    * Create a REQUESTED reservation request and returns before processing.
    */
   async requestReservation(actor: ActorContext, input: RequestReservationInput): Promise<ReservationRequest> {

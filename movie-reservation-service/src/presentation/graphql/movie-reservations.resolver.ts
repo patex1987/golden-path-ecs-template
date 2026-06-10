@@ -81,8 +81,18 @@ export class MovieReservationsResolver {
       context.actor,
       screenings.map((screening) => screening.id),
     );
+    const reservedSeatIdsByScreeningId = await this.movieReservationsService.listReservedSeatIdsForScreenings(
+      context.actor,
+      screenings.map((screening) => screening.id),
+    );
 
-    return screenings.map((screening) => toScreeningGql(screening, seatsByScreeningId.get(screening.id) ?? []));
+    return screenings.map((screening) =>
+      toScreeningGql(
+        screening,
+        seatsByScreeningId.get(screening.id) ?? [],
+        reservedSeatIdsByScreeningId.get(screening.id),
+      ),
+    );
   }
 
   @Reflect.metadata('design:paramtypes', [Object, RequestReservationInputGql])

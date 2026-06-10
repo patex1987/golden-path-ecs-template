@@ -211,6 +211,11 @@ type Seat {
   """Seat id used in RequestReservationInput.seatIds."""
   id: ID!
 
+  """
+  True when a confirmed reservation already holds this seat for the current screening.
+  """
+  isReserved: Boolean!
+
   """Seat number within the row."""
   number: Int!
 

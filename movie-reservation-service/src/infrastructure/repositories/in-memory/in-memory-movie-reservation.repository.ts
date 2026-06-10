@@ -95,6 +95,34 @@ export class InMemoryMovieReservationRepository implements MovieReservationRepos
     return new Map(screeningSeats.map(({ screeningId, seats }) => [screeningId, seats]));
   }
 
+  async findReservedSeatIdsByScreeningIds(
+    movieProviderId: MovieProviderId,
+    screeningIds: readonly ScreeningId[],
+  ): Promise<ReadonlyMap<ScreeningId, ReadonlySet<SeatId>>> {
+    const requestedScreeningIds = new Set(screeningIds);
+    const reservedSeatIdsByScreeningId = new Map<ScreeningId, Set<SeatId>>();
+
+    for (const screeningId of screeningIds) {
+      reservedSeatIdsByScreeningId.set(screeningId, new Set<SeatId>());
+    }
+
+    for (const reservation of this.store.reservationsById.values()) {
+      if (reservation.movieProviderId !== movieProviderId || !requestedScreeningIds.has(reservation.screeningId)) {
+        continue;
+      }
+
+      const seatIds = reservedSeatIdsByScreeningId.get(reservation.screeningId) ?? new Set<SeatId>();
+
+      for (const seatId of reservation.seatIds) {
+        seatIds.add(seatId);
+      }
+
+      reservedSeatIdsByScreeningId.set(reservation.screeningId, seatIds);
+    }
+
+    return reservedSeatIdsByScreeningId;
+  }
+
   async findSeatsByIdsForScreening(
     movieProviderId: MovieProviderId,
     screeningId: ScreeningId,
