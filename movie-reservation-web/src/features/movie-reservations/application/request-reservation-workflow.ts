@@ -39,15 +39,28 @@ export interface RequestReservationWorkflowEvents {
 }
 
 /**
+ * Named input object for the reservation workflow use case.
+ *
+ * TypeScript does not have Python-style named arguments, so object parameters
+ * are the idiomatic way to keep multi-dependency function calls readable.
+ */
+export interface RequestReservationWorkflowInput {
+  readonly command: RequestReservationCommand;
+  readonly dependencies: RequestReservationWorkflowDependencies;
+  readonly events: RequestReservationWorkflowEvents;
+  readonly pollingPolicy: ReservationPollingPolicy;
+}
+
+/**
  * Creates a reservation request, polls until the backend reaches a terminal
  * state, and loads the final reservation when the request is confirmed.
  */
-export async function requestReservationWorkflow(
-  command: RequestReservationCommand,
-  dependencies: RequestReservationWorkflowDependencies,
-  events: RequestReservationWorkflowEvents,
-  pollingPolicy: ReservationPollingPolicy,
-): Promise<void> {
+export async function requestReservationWorkflow({
+  command,
+  dependencies,
+  events,
+  pollingPolicy,
+}: RequestReservationWorkflowInput): Promise<void> {
   const request = await dependencies.api.requestReservation(command);
 
   if (!dependencies.isCurrentRun()) {
