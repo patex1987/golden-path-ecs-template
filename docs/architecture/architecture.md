@@ -13,6 +13,34 @@ The long-term architecture is a small multi-app cluster with shared deployment a
 
 ---
 
+## Frontend Layer
+
+The first frontend is `movie-reservation-web/`.
+
+Target framework: React with Vite and TypeScript.
+
+The frontend follows a feature-first clean architecture shape:
+
+- `src/features/movie-reservations/domain` for plain TypeScript rules and
+  domain-facing types
+- `src/features/movie-reservations/application` for use cases and ports
+- `src/features/movie-reservations/adapters` for React hooks, GraphQL
+  operations, runtime parsers, and error mapping
+- `src/features/movie-reservations/ui` for React components
+- `src/platform` for cross-cutting browser/runtime capabilities such as the
+  GraphQL transport helper and observability context construction
+
+The dependency direction mirrors the backend principle in a frontend-sized way:
+domain and application code do not import React, browser APIs, Vite env,
+`fetch`, or platform helpers. Outer adapters translate those runtime details
+into application/domain models.
+
+See [frontend-architecture.md](frontend-architecture.md) for the folder
+structure, Mermaid diagrams, testing convention, and frontend-specific
+tradeoffs.
+
+---
+
 ## System Context
 
 ```text

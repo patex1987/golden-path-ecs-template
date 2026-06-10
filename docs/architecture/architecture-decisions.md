@@ -318,3 +318,51 @@ separate from processor exception retry policy. The current `unexpected-error`
 classification is still intentionally coarse and should be narrowed before real
 external dependencies such as payment, provider inventory, or notifications are
 added.
+
+---
+
+## ADR 014: Use Feature-First Clean Architecture For The React Frontend
+
+Status: accepted.
+
+### Decision
+
+Structure `movie-reservation-web/` as a small feature-first React/Vite
+frontend with explicit clean architecture boundaries:
+
+- `features/movie-reservations/domain`
+- `features/movie-reservations/application`
+- `features/movie-reservations/adapters`
+- `features/movie-reservations/ui`
+- `platform/api`
+- `platform/observability`
+
+Domain and application code should stay framework-free. React hooks, GraphQL
+operation adapters, runtime parsers, browser environment access, and
+observability propagation live at the outer edges.
+
+The detailed folder and dependency rules live in
+[frontend-architecture.md](frontend-architecture.md).
+
+### Reason
+
+The frontend has real workflow behavior: catalog selection, screening changes,
+seat selection, reservation submission, bounded polling, result lookup, and
+observability propagation. Keeping those rules inside large React components
+would make them harder to test and easier to regress.
+
+The chosen structure keeps the important behavior in plain TypeScript while
+still allowing React components to stay small and focused on rendering. It also
+matches the backend lesson without copying backend architecture blindly into the
+browser: the frontend needs clean boundaries, not NestJS-style modules.
+
+### Tradeoff
+
+This adds more folders than a tiny one-component Vite app. That cost is
+acceptable because the frontend already has non-trivial business workflow and
+runtime boundary code.
+
+Do not generalize this into broad `utils`, `helpers`, or generic `shared`
+folders. Add new feature folders or platform capabilities only when real code
+needs them. Keep unit tests colocated with frontend modules for now; create
+separate e2e/browser test folders when Playwright is added.

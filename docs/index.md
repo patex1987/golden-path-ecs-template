@@ -18,6 +18,7 @@ Current documents:
 - [architecture.md](architecture/architecture.md) - current system architecture and target direction.
 - [architecture-decisions.md](architecture/architecture-decisions.md) - ADR-style decision log and tradeoffs.
 - [database-schema.md](architecture/database-schema.md) - current Postgres table relationships and reservation workflow constraints.
+- [frontend-architecture.md](architecture/frontend-architecture.md) - React/Vite frontend clean architecture layers, folder structure, dependency rules, and diagrams.
 - [graphql-request-flow.md](architecture/graphql-request-flow.md) - GraphQL request path through NestJS, Apollo, middleware, context, resolvers, and clean architecture layers.
 - [golden-path.md](architecture/golden-path.md) - the opinionated service path this template should provide.
 - [movie-reservation-domain-vocabulary.md](architecture/movie-reservation-domain-vocabulary.md) - shared domain vocabulary for movie providers, auditoriums, screenings, seats, reservation requests, and reservations.
@@ -34,9 +35,13 @@ Use this folder when a document describes planned work, sequencing, risks, or ac
 Current documents:
 
 - [d4-graphql-polling-api.md](plans/d4-graphql-polling-api.md) - implementation plan for the movie reservation GraphQL polling API.
+- [d8a-rebase-frontend-spike.md](plans/d8a-rebase-frontend-spike.md) - implementation plan for safely porting the frontend spike onto finalized D7 observability.
+- [distributed-observability-demo-platform.md](plans/distributed-observability-demo-platform.md) - future follow-ups for the multi-service observability demo platform direction.
 - [github-actions-ci-foundation.md](plans/github-actions-ci-foundation.md) - implementation plan for the first small GitHub Actions CI workflow.
 - [implementation-plan.md](plans/implementation-plan.md) - overall learning and build plan.
-- [local-observability-foundation.md](plans/local-observability-foundation.md) - implementation plan for local structured logging, OpenTelemetry traces/metrics, API containerization, and collector integration.
+- [frontend-follow-up-triage.md](plans/frontend-follow-up-triage.md) - D8 frontend issue split and priority decision for related follow-ups.
+- [local-observability-foundation.md](plans/delivered/local-observability-foundation.md) - delivered implementation plan for local structured logging, OpenTelemetry traces/metrics, API containerization, and collector integration.
+- [movie-reservation-frontend-product-requirements.md](plans/movie-reservation-frontend-product-requirements.md) - product and UX requirements for the D8 customer-facing movie booking frontend.
 - [movie-reservation-platform-roadmap.md](plans/movie-reservation-platform-roadmap.md) - roadmap for the movie reservation platform slice.
 - [nestjs-service-migration.md](plans/nestjs-service-migration.md) - completed/active migration plan for moving the service to NestJS.
 - [platform-follow-up-tasks.md](plans/platform-follow-up-tasks.md) - platform, CI/CD, infrastructure workflow, and delivery-system follow-up tasks.
@@ -54,6 +59,7 @@ Current documents:
 
 - [my-learning-notes.md](learning/my-learning-notes.md) - chronological personal learning notes.
 - [graphql-context-factory-notes.md](learning/graphql-context-factory-notes.md) - notes on Apollo GraphQL context creation and request enrichment.
+- [monorepo-vs-multirepo-frontend-backend.md](learning/monorepo-vs-multirepo-frontend-backend.md) - learning note comparing monorepo and multi-repo options for frontend/backend development and deployment.
 - [node-package-tooling-cards.md](learning/node-package-tooling-cards.md) - Trello-card-style notes for nvm, npm, Corepack, pnpm, and Yarn.
 - [ts-cdk-learning-path.md](learning/ts-cdk-learning-path.md) - TypeScript and CDK study path.
 - [typescript-docstrings-and-generated-docs.md](learning/typescript-docstrings-and-generated-docs.md) - notes on TypeScript documentation comments and generated docs.
