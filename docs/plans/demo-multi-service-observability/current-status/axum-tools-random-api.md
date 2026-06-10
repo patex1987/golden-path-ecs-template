@@ -4,6 +4,7 @@ Status: READY
 Branch: demo-multi-service-observability
 Latest commit: 3bd61f8 docs: document demo service runbook
 Owner/agent: Codex
+Last validated: 2026-06-11 Europe/Bratislava
 
 ### What Works
 - Rust Axum API runs on port `8082`.
@@ -16,6 +17,8 @@ Owner/agent: Codex
 - Structured stdout logs include request ids, correlation ids, route, status, duration, and fault.
 - Rust OpenTelemetry trace spans and custom metrics are wired for OTLP HTTP export when `OTEL_EXPORTER_OTLP_ENDPOINT` is set.
 - Dockerfile and `docker-compose.yml` are present.
+- Compose publishes the API and MCP ports so the Python agent container can reach `host.docker.internal:8092`.
+- Full agent smoke verified happy, slow, and dependency-error paths through this service.
 
 ### How To Run
 ```sh
@@ -27,7 +30,7 @@ Or with Compose:
 
 ```sh
 cd /home/patex1987/development/axum_tools_random_api
-docker compose up --build axum-tools-random-api
+docker compose up -d --build
 ```
 
 ### Health / Smoke Checks
@@ -80,6 +83,7 @@ Owner/agent: Codex
 - Downstream Rust 503 errors are returned as compact `ok:false` tool payloads rather than separate wrapper failures.
 - Structured stdout logs and Python OpenTelemetry setup are present.
 - Dockerfile and Compose service are present.
+- Compose publishes MCP port `8092` on the Docker host interface for agent-container access.
 
 ### How To Run
 ```sh
@@ -94,7 +98,7 @@ Or with Compose:
 
 ```sh
 cd /home/patex1987/development/axum_tools_random_api
-docker compose up --build
+docker compose up -d --build
 ```
 
 ### Health / Smoke Checks
@@ -133,7 +137,17 @@ asyncio.run(main())
 
 ### Known Gaps
 - Local `uv` environment must use pyenv Python, not system Python. The package has `.python-version` set to `3.12`.
-- No full agent end-to-end run was executed from this repo; MCP tool smoke was executed directly with a FastMCP client.
+- No live reservation-service availability lookup; ranking uses deterministic local heuristics.
+
+### Integrated Smoke Results
+
+| Scenario | Correlation id | Result |
+| --- | --- | --- |
+| Happy path | `smoke-happy-frontend-agent-2` | Recommendation succeeded and the agent confirmed a reservation. |
+| Slow dependency | `smoke-slow-frontend-agent-1` | `slow-recommendation` added visible latency and still succeeded. |
+| Dependency error | `smoke-error-labelled-agent-1` | `recommendation-error` produced a controlled dependency failure. |
+
+Loki query for `{service_name="axum-tools-random-api"} |= "recommendation-error"` returned a matching service log.
 
 ### Demo Risk
 Low

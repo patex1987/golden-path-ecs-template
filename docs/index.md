@@ -36,6 +36,7 @@ Current documents:
 
 - [d4-graphql-polling-api.md](plans/d4-graphql-polling-api.md) - implementation plan for the movie reservation GraphQL polling API.
 - [d8a-rebase-frontend-spike.md](plans/d8a-rebase-frontend-spike.md) - implementation plan for safely porting the frontend spike onto finalized D7 observability.
+- [demo-multi-service-observability/](plans/demo-multi-service-observability/README.md) - overnight per-repository instructions for the multi-service agent, MCP, fault-simulation, and Grafana observability demo.
 - [distributed-observability-demo-platform.md](plans/distributed-observability-demo-platform.md) - future follow-ups for the multi-service observability demo platform direction.
 - [github-actions-ci-foundation.md](plans/github-actions-ci-foundation.md) - implementation plan for the first small GitHub Actions CI workflow.
 - [implementation-plan.md](plans/implementation-plan.md) - overall learning and build plan.

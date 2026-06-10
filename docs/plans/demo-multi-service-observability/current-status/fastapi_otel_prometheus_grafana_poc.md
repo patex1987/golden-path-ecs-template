@@ -4,6 +4,7 @@ Status: READY
 Branch: demo-multi-service-observability
 Latest commit: 2d32a3d
 Owner/agent: Codex
+Last validated: 2026-06-11 Europe/Bratislava
 
 ### What Works
 - Local observability stack definition exists for Grafana, Prometheus, Loki, Tempo, Alloy, and OpenTelemetry Collector.
@@ -18,6 +19,9 @@ Owner/agent: Codex
 - Dashboard includes Loki JSON-log panels scoped by `service_environment` and `service_name`.
 - Dashboard includes Tempo TraceQL table panels as trace-derived visibility scaffolding.
 - Planning document exists at `docs/plans/main-grafana-dashboard-golden-signals.md`.
+- Live Grafana provisioning was verified; dashboard UID `multi-service-reservation-demo` is available.
+- Loki service labels were verified for all five demo services.
+- Tempo trace ingestion was verified with a real cross-service reservation trace.
 
 ### How To Run
 ```sh
@@ -46,7 +50,7 @@ curl http://localhost:3000/api/health
 curl http://localhost:9090/-/ready
 
 # Expected after stack startup and observable containers running:
-# service_name values include demo services that have observability.logs=true.
+# service_name values include all demo services that have observability.logs=true.
 curl -G 'http://localhost:3100/loki/api/v1/label/service_name/values'
 
 # Expected after demo traffic:
@@ -63,19 +67,29 @@ curl -G 'http://localhost:9090/api/v1/label/__name__/values'
   - Prometheus datasource UID is `prometheus`.
   - Loki datasource UID is `loki`.
   - Tempo datasource UID is `tempo`.
-  - Tempo is configured with traces-to-logs through Loki by `trace_id`.
-  - Loki derived field links back to Tempo when JSON logs contain a 32-character hex `trace_id`.
-  - Alloy only scrapes Docker stdout logs from containers labelled `observability.logs=true`.
+- Tempo is configured with traces-to-logs through Loki by `trace_id`.
+- Loki derived field links back to Tempo when JSON logs contain a 32-character hex `trace_id`.
+- Alloy only scrapes Docker stdout logs from containers labelled `observability.logs=true`.
+- Verified Loki `service_name` values include `movie-agent-worker`, `movie-reservation-mcp`, `movie-reservation-service`, `axum-tools-mcp`, and `axum-tools-random-api`.
+
+### Integrated Smoke Results
+
+| Scenario | Correlation id | Trace id | Result |
+| --- | --- | --- | --- |
+| Happy path | `smoke-happy-frontend-agent-2` | `be00c2b9b92f0bce768eab4eb46f4743` | Tempo returned the cross-service trace. |
+| Slow dependency | `smoke-slow-frontend-agent-1` | `575b6a6e0dc370965ecf243bc7c361ec` | Latency path completed after about 2.8s. |
+| Dependency error | `smoke-error-labelled-agent-1` | `62c3696fc73772228537b8003e2f4e9e` | Loki returned the labelled agent error log. |
 
 ### Known Gaps
-- Live Grafana provisioning was not verified in this session because Docker daemon access was blocked.
-- Tempo TraceQL table panel shapes may need tuning after opening the dashboard in Grafana.
-- Cross-service Prometheus metric names for the Python agent, MCP servers, and Rust API still need discovery after those services run.
+- Some Tempo TraceQL table panel shapes may still need tuning during rehearsal if Grafana renders them differently than direct Tempo API checks.
+- Cross-service Prometheus metric names for the Python agent, MCP servers, and Rust API can still be improved, but the demo does not depend solely on metrics.
 - Saturation is intentionally a v1 placeholder/proxy section, not production-grade CPU/memory/queue/pool/backlog coverage.
 - `grafana/dashboards` had been container-owned; it was recreated as user-owned so the dashboard JSON could be versioned. The old empty backup path is ignored as `/grafana/.dashboards-container-owned-backup/`.
 
 ### Demo Risk
-Medium
+Low to medium.
+
+Use the known-good correlation ids and trace ids above if a live panel needs a quick sanity check during rehearsal.
 
 ### Needs From Other Repos
 - Demo service containers must emit OTLP traces/metrics to this stack's collector.
