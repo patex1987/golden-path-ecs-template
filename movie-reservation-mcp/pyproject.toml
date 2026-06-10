@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "movie-reservation-mcp"
+version = "0.1.0"
+description = "FastMCP tools for the local movie reservation GraphQL API."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "fastmcp>=2.0.0",
+  "httpx>=0.28.1",
+  "opentelemetry-api>=1.34.1",
+  "opentelemetry-sdk>=1.34.1",
+  "opentelemetry-exporter-otlp-proto-http>=1.34.1",
+  "opentelemetry-instrumentation-httpx>=0.55b1",
+]
+
+[project.scripts]
+movie-reservation-mcp = "movie_reservation_mcp.server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3.5",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
