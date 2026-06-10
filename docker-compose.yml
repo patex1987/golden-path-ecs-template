@@ -24,6 +24,7 @@ services:
     profiles:
       - api
       - observability
+      - demo
     command:
       - --config=/etc/otel-collector-config.yaml
     env_file:
@@ -44,10 +45,13 @@ services:
     container_name: golden-path-movie-reservations-api
     profiles:
       - api
+      - demo
     env_file:
       - ./movie-reservation-service/env_files/templates/in-docker/local-postgres.env.template
     environment:
       OTEL_METRIC_EXPORT_INTERVAL: "5000"
+      OTEL_SERVICE_NAME: movie-reservation-service
+      OTEL_RESOURCE_ATTRIBUTES: deployment.environment.name=local,service.environment=local,demo.name=multi-service-observability
     ports:
       - "127.0.0.1:${MOVIE_RESERVATION_API_HOST_PORT:-3001}:3000"
     labels:
@@ -65,6 +69,45 @@ services:
         - node
         - "-e"
         - "fetch('http://127.0.0.1:3000/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  movie-reservation-mcp:
+    build:
+      context: ./movie-reservation-mcp
+      dockerfile: Dockerfile
+    container_name: golden-path-movie-reservation-mcp
+    profiles:
+      - demo
+    environment:
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: "8091"
+      MCP_PATH: /mcp
+      MCP_TRANSPORT: http
+      MOVIE_RESERVATION_GRAPHQL_URL: http://api:3000/graphql
+      MOVIE_RESERVATION_AUTH_TOKEN: local-demo-token
+      OTEL_SERVICE_NAME: movie-reservation-mcp
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_RESOURCE_ATTRIBUTES: service.environment=local,demo.name=multi-service-observability
+    ports:
+      - "127.0.0.1:8091:8091"
+    labels:
+      observability.logs: "true"
+      service.name: "movie-reservation-mcp"
+      service.environment: "local"
+    depends_on:
+      api:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - "-c"
+        - "from urllib.request import urlopen; urlopen('http://127.0.0.1:8091/health', timeout=3).read()"
       interval: 10s
       timeout: 5s
       retries: 10
