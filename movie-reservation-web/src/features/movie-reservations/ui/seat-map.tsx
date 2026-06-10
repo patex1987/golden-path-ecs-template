@@ -49,6 +49,21 @@ export function SeatMap({
             Screen
           </div>
 
+          <div className="seat-legend" aria-label="Seat map legend">
+            <span>
+              <i className="seat-swatch seat-swatch--available" />
+              Available
+            </span>
+            <span>
+              <i className="seat-swatch seat-swatch--selected" />
+              Selected
+            </span>
+            <span>
+              <i className="seat-swatch seat-swatch--blocked" />
+              Blocked
+            </span>
+          </div>
+
           <div className="seat-grid" aria-label="Auditorium seats">
             {seatRows.map(([row, seats]) => (
               <div className="seat-row" key={row}>
@@ -58,15 +73,23 @@ export function SeatMap({
                 <div className="seat-row__seats">
                   {seats.map((seat) => {
                     const isSelected = selectedSeatIdSet.has(seat.id);
+                    const seatStateClass = seat.isReserved
+                      ? "seat-button--blocked"
+                      : isSelected
+                        ? "seat-button--selected"
+                        : "";
 
                     return (
                       <button
                         key={seat.id}
-                        className={`seat-button ${isSelected ? "seat-button--selected" : ""}`}
+                        className={`seat-button ${seatStateClass}`}
                         type="button"
+                        disabled={seat.isReserved}
                         onClick={() => onSeatToggle(seat)}
                         aria-pressed={isSelected}
-                        aria-label={`Seat ${formatSeatLabel(seat)}`}
+                        aria-label={`Seat ${formatSeatLabel(seat)}${
+                          seat.isReserved ? ", already reserved" : ""
+                        }`}
                       >
                         {seat.number}
                       </button>

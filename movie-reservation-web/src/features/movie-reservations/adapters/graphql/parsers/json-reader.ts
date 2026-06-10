@@ -81,6 +81,23 @@ export function readNumberField(
 }
 
 /**
+ * Reads an object field that must be a boolean.
+ */
+export function readBooleanField(
+  record: JsonRecord,
+  fieldName: string,
+  context: string,
+): boolean {
+  const value = record[fieldName];
+
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  throw new Error(`${context} was not a boolean`);
+}
+
+/**
  * Reads an object field that must be an array.
  */
 export function readArrayField(

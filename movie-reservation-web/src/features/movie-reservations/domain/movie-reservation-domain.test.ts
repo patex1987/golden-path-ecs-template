@@ -27,8 +27,9 @@ const screeningA1: Screening = {
   startsAt: "2026-06-10T10:00:00.000Z",
   endsAt: "2026-06-10T12:00:00.000Z",
   seats: [
-    { id: "seat-a1", row: "A", number: 1 },
-    { id: "seat-a2", row: "A", number: 2 },
+    { id: "seat-a1", row: "A", number: 1, isReserved: false },
+    { id: "seat-a2", row: "A", number: 2, isReserved: false },
+    { id: "seat-a3", row: "A", number: 3, isReserved: true },
   ],
 };
 
@@ -38,7 +39,7 @@ const screeningB1: Screening = {
   auditoriumId: "auditorium-b",
   startsAt: "2026-06-10T13:00:00.000Z",
   endsAt: "2026-06-10T15:00:00.000Z",
-  seats: [{ id: "seat-b1", row: "B", number: 1 }],
+  seats: [{ id: "seat-b1", row: "B", number: 1, isReserved: false }],
 };
 
 const catalog: Catalog = {
@@ -156,11 +157,15 @@ describe("movie reservation domain helpers", () => {
       "seat-a2",
     ]);
     expect(findSelectedSeats(screeningA1, ["seat-a2"])).toEqual([
-      { id: "seat-a2", row: "A", number: 2 },
+      { id: "seat-a2", row: "A", number: 2, isReserved: false },
     ]);
-    expect(findSelectedSeatIds(screeningA1, ["seat-a2", "stale-seat"])).toEqual([
-      "seat-a2",
-    ]);
+    expect(
+      findSelectedSeatIds(screeningA1, [
+        "seat-a2",
+        "seat-a3",
+        "stale-seat",
+      ]),
+    ).toEqual(["seat-a2"]);
   });
 
   it("classifies reservation request statuses", () => {

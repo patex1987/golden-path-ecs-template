@@ -42,7 +42,7 @@ export function findSelectedSeatIds(
 
   return (
     screening?.seats
-      .filter((seat) => selectedSeatIdSet.has(seat.id))
+      .filter((seat) => selectedSeatIdSet.has(seat.id) && !seat.isReserved)
       .map((seat) => seat.id) ?? []
   );
 }

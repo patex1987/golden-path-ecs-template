@@ -38,6 +38,7 @@ query ReservationUiCatalog {
       id
       row
       number
+      isReserved
     }
   }
 }`;
@@ -78,7 +79,7 @@ query ReservationUiReservationResult($requestId: ID!) {
 
 interface ApiCallInput {
   readonly workflow: DemoTraceContext;
-  readonly onExchange: (exchange: GraphqlExchange) => void;
+  readonly onExchange?: (exchange: GraphqlExchange) => void;
 }
 
 /**

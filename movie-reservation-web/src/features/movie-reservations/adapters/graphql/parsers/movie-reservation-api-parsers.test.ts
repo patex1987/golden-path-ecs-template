@@ -31,13 +31,14 @@ describe("movie reservation API parsers", () => {
           auditoriumId: "auditorium-1",
           startsAt: "2026-06-10T10:00:00.000Z",
           endsAt: "2026-06-10T12:00:00.000Z",
-          seats: [{ id: "seat-1", row: "A", number: 1 }],
+          seats: [{ id: "seat-1", row: "A", number: 1, isReserved: true }],
         },
       ],
     });
 
     expect(catalog.movies[0]?.title).toBe("Type Safe Matinee");
     expect(catalog.screenings[0]?.seats[0]?.id).toBe("seat-1");
+    expect(catalog.screenings[0]?.seats[0]?.isReserved).toBe(true);
     expect(catalog.me.movieProviderCode).toBeNull();
   });
 

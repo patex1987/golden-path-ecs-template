@@ -8,6 +8,7 @@ import type {
 import {
   type JsonRecord,
   readArrayField,
+  readBooleanField,
   readNullableStringField,
   readNumberField,
   readRecord,
@@ -75,6 +76,7 @@ function parseSeat(value: unknown): Seat {
     id: readStringField(record, "id", "Seat.id"),
     row: readStringField(record, "row", "Seat.row"),
     number: readNumberField(record, "number", "Seat.number"),
+    isReserved: readBooleanField(record, "isReserved", "Seat.isReserved"),
   };
 }
 

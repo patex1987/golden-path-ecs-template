@@ -36,6 +36,7 @@ export interface Seat {
   readonly id: string;
   readonly row: string;
   readonly number: number;
+  readonly isReserved: boolean;
 }
 
 /**

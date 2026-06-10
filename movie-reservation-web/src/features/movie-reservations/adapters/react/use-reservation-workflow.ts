@@ -100,6 +100,10 @@ export function useReservationWorkflow({
   }, [resetReservation, selectedScreeningId]);
 
   const toggleSeat = useCallback((seat: Seat) => {
+    if (seat.isReserved) {
+      return;
+    }
+
     setSelectedSeatIds((currentSeatIds) =>
       toggleSeatId(currentSeatIds, seat.id),
     );

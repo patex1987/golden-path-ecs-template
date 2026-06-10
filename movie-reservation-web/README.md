@@ -33,18 +33,25 @@ The frontend sends GraphQL requests through Vite's `/graphql` proxy. By default
 the proxy targets `http://127.0.0.1:3001`, which matches the containerized API
 profile documented in `docs/workflows/local-observability.md`.
 
+The agent panel sends demo agent requests through Vite's `/api/v1/demo` proxy.
+By default that proxy targets `http://127.0.0.1:8081`, the Docker-exposed
+`movie-agent-worker` service from `/home/patex1987/development/python-agent-with-idp`.
+
 The frontend dev script loads
 `movie-reservation-web/env_files/local/local-dev.env`. Edit that rendered file
-if your API runs on another port:
+if your API or agent runs on another port:
 
 ```env
 VITE_API_PROXY_TARGET=http://127.0.0.1:3000
+VITE_AGENT_PROXY_TARGET=http://127.0.0.1:8081
 ```
 
 Optional local-only settings:
 
 - `VITE_GRAPHQL_URL` overrides the browser GraphQL endpoint. Leave it unset to
   use the Vite `/graphql` proxy.
+- `VITE_AGENT_URL` overrides the browser agent endpoint. Leave it unset to use
+  the Vite `/api/v1/demo` proxy.
 - `VITE_DEMO_BEARER_TOKEN` sends a local demo bearer token with GraphQL
   requests while running the Vite dev server. `VITE_*` values are visible to
   browser code, so this value is not a secret. Local fixed-user backend profiles
@@ -61,10 +68,11 @@ Optional local-only settings:
 4. Select one or more seats.
 5. Request a reservation.
 6. Watch polling move the request into a terminal state.
-7. Use the browser network panel to inspect the emitted propagation headers,
-   then search for the workflow in Grafana/Tempo/Loki. A future Playwright
-   smoke test should capture the same workflow in an automated report.
+7. Use the agent panel prompt chips to run the happy, slow, or failing
+   recommendation workflow through the Python agent and both MCP servers.
+8. Copy the correlation boundary id from the agent panel, then search for the
+   workflow in Grafana/Tempo/Loki.
 
-The current backend API returns auditorium seats, not a dedicated availability
-calculation. Already-reserved seeded seats are still clickable and should become
-useful rejection demos.
+The seat map marks confirmed seats as blocked. In the local seed data, seats A1
+and A2 for the Type-Safe Matinee screening are already confirmed, while A3 is
+available for the happy-path demo.
