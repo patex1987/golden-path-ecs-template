@@ -33,17 +33,17 @@ flowchart LR
 Readable version:
 
 ```text
-domain <- application <- adapters/hooks/API <- UI and platform runtime
+domain <- application <- adapters/react + adapters/graphql <- UI and platform runtime
 ```
 
 Allowed direction examples:
 
-- `ui/movie-reservation-demo.tsx` may import hooks from `adapters`.
-- `adapters/use-reservation-workflow.ts` may call an application use case and
-  domain helpers.
+- `ui/movie-reservation-demo.tsx` may import hooks from `adapters/react`.
+- `adapters/react/use-reservation-workflow.ts` may call an application use case
+  and domain helpers.
 - `application/request-reservation-workflow.ts` may depend on the
   `MovieReservationApi` port, but not on React or `fetch`.
-- `adapters/movie-reservation-api.ts` may implement that port through
+- `adapters/graphql/movie-reservation-api.ts` may implement that port through
   `platform/api/graphql-client.ts`.
 - `domain/catalog-selection.ts` must stay plain TypeScript.
 
@@ -76,6 +76,10 @@ movie-reservation-web/
         domain/
         application/
         adapters/
+          errors/
+          graphql/
+            parsers/
+          react/
         ui/
     platform/
       api/
@@ -132,11 +136,11 @@ Adapters connect the application feature to React and external systems.
 
 Current examples:
 
-- React controller hooks such as `use-movie-catalog.ts` and
+- React controller hooks under `react/`, such as `use-movie-catalog.ts` and
   `use-reservation-workflow.ts`;
-- GraphQL operation adapter in `movie-reservation-api.ts`;
-- runtime response parsers in `movie-reservation-api-parsers.ts`;
-- local user-facing error mapping.
+- GraphQL operation adapter under `graphql/movie-reservation-api.ts`;
+- runtime response parsers under `graphql/parsers/`;
+- local user-facing error mapping under `errors/`.
 
 Adapters are allowed to know about React hooks, GraphQL operation strings,
 runtime validation, and platform API clients. They should translate external
@@ -231,7 +235,7 @@ Frontend unit tests are colocated with the code they protect:
 ```text
 domain/movie-reservation-domain.test.ts
 application/request-reservation-workflow.test.ts
-adapters/movie-reservation-api-parsers.test.ts
+adapters/graphql/parsers/movie-reservation-api-parsers.test.ts
 platform/api/graphql-client.test.ts
 platform/observability/trace-context.test.ts
 ```

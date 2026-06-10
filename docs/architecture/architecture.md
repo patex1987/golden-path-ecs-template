@@ -24,8 +24,9 @@ The frontend follows a feature-first clean architecture shape:
 - `src/features/movie-reservations/domain` for plain TypeScript rules and
   domain-facing types
 - `src/features/movie-reservations/application` for use cases and ports
-- `src/features/movie-reservations/adapters` for React hooks, GraphQL
-  operations, runtime parsers, and error mapping
+- `src/features/movie-reservations/adapters` for outer feature adapters,
+  grouped into React controller hooks, GraphQL operations/parsers, and error
+  mapping
 - `src/features/movie-reservations/ui` for React components
 - `src/platform` for cross-cutting browser/runtime capabilities such as the
   GraphQL transport helper and observability context construction

@@ -27,6 +27,9 @@ Recommended approach:
 This branch is `issue-4_observability-foundation`, linked to GitHub issue
 `#4 D7: Add Local Observability`.
 
+Status: completed. The work is on `main` through PR #22, and GitHub issue #4 is
+closed.
+
 ## 2. Goals
 
 - Emit structured JSON logs from the NestJS service to stdout.
