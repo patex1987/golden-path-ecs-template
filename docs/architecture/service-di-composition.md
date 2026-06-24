@@ -66,13 +66,17 @@ distinction is:
 
 - env input: `COMPOSITION_PROFILE`
 - derived typed config: `AUTH_MODE`, `PERSISTENCE_MODE`
-- independent runtime setting: `RESERVATION_WORKER_MODE`
+- independent runtime settings: `RESERVATION_WORKER_MODE`,
+  `RESERVATION_FAILURE_INJECTION`
 
 `RESERVATION_WORKER_MODE` stays separate because worker lifecycle is not the
 same decision as auth or repository selection. For example, local Postgres can
 run with the fake worker enabled for manual polling workflows, while tests can
 run the same Postgres profile with the worker disabled and drive the processor
 deterministically.
+
+Failure injection stays separate for the same reason: it is a demo/runtime
+toggle for processor behavior, not a core auth or repository dependency choice.
 
 ## Provider Wiring
 
@@ -122,8 +126,7 @@ flowchart TB
   I["Infrastructure adapters"] --> E
   J["Presentation: GraphQL + HTTP"] --> D
 
-  G -. "does not import" .-> D
-  F -. "does not read env vars" .-> A
+
 ```
 
 The dependency direction stays inward:

@@ -37,6 +37,7 @@ Current documents:
 - [d4-graphql-polling-api.md](plans/d4-graphql-polling-api.md) - implementation plan for the movie reservation GraphQL polling API.
 - [d8a-rebase-frontend-spike.md](plans/d8a-rebase-frontend-spike.md) - implementation plan for safely porting the frontend spike onto finalized D7 observability.
 - [distributed-observability-demo-platform.md](plans/distributed-observability-demo-platform.md) - future follow-ups for the multi-service observability demo platform direction.
+- [ecs-adot-managed-observability.md](plans/ecs-adot-managed-observability.md) - implementation plan for ECS/Fargate deployment with an ADOT sidecar, X-Ray, CloudWatch metrics, AMP, AMG, and demo reservation failure injection.
 - [github-actions-ci-foundation.md](plans/github-actions-ci-foundation.md) - implementation plan for the first small GitHub Actions CI workflow.
 - [implementation-plan.md](plans/implementation-plan.md) - overall learning and build plan.
 - [frontend-follow-up-triage.md](plans/frontend-follow-up-triage.md) - D8 frontend issue split and priority decision for related follow-ups.
